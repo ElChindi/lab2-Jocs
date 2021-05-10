@@ -9,6 +9,8 @@
 #include "camera.h"
 #include "utils.h"
 
+#include "mygame.h"
+
 class Game
 {
 public:
@@ -25,6 +27,9 @@ public:
 	float elapsed_time;
 	int fps;
 	bool must_exit;
+
+	//stages
+	PlayStage* playStage;
 
 	//some vars
 	Camera* camera; //our global camera
