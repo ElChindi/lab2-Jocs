@@ -21,23 +21,37 @@ float angle1 = 0;
 Scene* Scene::world = NULL;
 
 
+
 Scene::Scene() {
 	//load one texture without using the Texture Manager (Texture::Get would use the manager)
-	texture1 = new Texture();
-	texture1->load("data/texture.tga");
 
-	// example of loading Mesh from Mesh Manager
-	mesh1 = Mesh::Get("data/box.ASE");
+	cube = EntityMesh();
+	Matrix44 m;
+	m.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
+	cube.model = m;
+	cube.texture = new Texture();
+	cube.texture->load("data/texture.tga");
+	cube.mesh = Mesh::Get("data/box.ASE");
+	cube.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	cube.color = Vector4(1,1,1,1);
+	
+	ship = EntityMesh();
+	Matrix44 m2;
+	m2.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
+	ship.model = m2;
+	ship.texture = new Texture();
+	ship.texture->load("data/texture.tga");
+	ship.mesh = Mesh::Get("data/boat_large.obj");
+	ship.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	ship.color = Vector4(1, 1, 1, 1);
 
-	// example of shader loading using the shaders manager
-	shader1 = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 }
 
 
 
 
 
-
+//PLAYSTAGE METHODS
 void PlayStage::render() {
 	//set the clear color (the background color)
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -53,28 +67,8 @@ void PlayStage::render() {
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	//create model matrix for cube
-	Matrix44 m;
-	m.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
 
-	if (shader1)
-	{
-		//enable shader
-		shader1->enable();
-
-		//upload uniforms
-		shader1->setUniform("u_color", Vector4(1, 1, 1, 1));
-		shader1->setUniform("u_viewprojection", Game::instance->camera->viewprojection_matrix);
-		shader1->setUniform("u_texture", texture1, 0);
-		shader1->setUniform("u_model", m);
-		shader1->setUniform("u_time", Game::instance->time);
-
-		//do the draw call
-		mesh1->render(GL_TRIANGLES);
-
-		//disable shader
-		shader1->disable();
-	}
+	Scene::world->ship.render();
 
 	//Draw the floor grid
 	drawGrid();
@@ -89,4 +83,26 @@ void PlayStage::render() {
 void PlayStage::update(double dt) {
 	
 
+}
+
+//ENTITY METHODS
+void EntityMesh::render()
+{
+	//get the last camera that was activated
+	Camera* camera = Camera::current;
+	Matrix44 model = this->model;
+
+	//enable shader and pass uniforms
+	shader->enable();
+	shader->setUniform("u_color", color);
+	shader->setUniform("u_model", model);
+	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+	shader->setUniform("u_texture", texture, 0);
+	shader->setUniform("u_time", Game::instance->time);
+
+	//render the mesh using the shader
+	mesh->render(GL_TRIANGLES);
+
+	//disable the shader after finishing rendering
+	shader->disable();
 }
