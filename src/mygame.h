@@ -57,7 +57,7 @@ public:
     Ship* ship;
 
     Player();
-    void move
+    //void move
 
 };
 
