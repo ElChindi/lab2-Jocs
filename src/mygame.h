@@ -51,6 +51,16 @@ class EntityMesh : public Entity
         void update(float dt) {};
 };
 
+class Player
+{
+public:
+    Ship* ship;
+
+    Player();
+    void move
+
+};
+
 class Ship : public EntityMesh
 {
 public:
@@ -70,6 +80,14 @@ public:
 
     static void renderAll();
     static void updateAll(float dt);
+};
+
+class Sea : public EntityMesh
+{
+public:
+    
+    void render();
+
 };
 
 

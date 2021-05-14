@@ -32,7 +32,7 @@ Scene::Scene() {
 	cube.texture = new Texture();
 	cube.texture->load("data/texture.tga");
 	cube.mesh = Mesh::Get("data/box.ASE");
-	cube.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	cube.shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture.fs");
 	cube.color = Vector4(1,1,1,1);
 	
 	ship = EntityMesh();
@@ -40,8 +40,8 @@ Scene::Scene() {
 	m2.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
 	ship.model = m2;
 	ship.texture = new Texture();
-	ship.texture->load("data/texture.tga");
-	ship.mesh = Mesh::Get("data/boat_large.obj");
+	ship.texture->load("data/ship_light_cannon.tga");
+	ship.mesh = Mesh::Get("data/ship_light_cannon.obj");
 	ship.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	ship.color = Vector4(1, 1, 1, 1);
 
@@ -76,8 +76,6 @@ void PlayStage::render() {
 	//render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
 
-	
-
 }
 
 void PlayStage::update(double dt) {
@@ -88,6 +86,8 @@ void PlayStage::update(double dt) {
 //ENTITY METHODS
 void EntityMesh::render()
 {
+	//Check Frustum
+	//if(!camera->)
 	//get the last camera that was activated
 	Camera* camera = Camera::current;
 	Matrix44 model = this->model;
