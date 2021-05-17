@@ -38,6 +38,17 @@ Scene::Scene() {
 	
 	player = new Player();
 	
+	sea = Sea();
+	sea.mesh = new Mesh();
+	sea.mesh->createPlane(1000);
+	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	sea.color = Vector4(1, 1, 1, 1);
+	Matrix44 m3;
+	//m3.translate(floor(Camera::current->eye.x / 100.0) * 100.0f, 0.0f, floor(Camera::current->eye.z / 100.0f) * 100.0f);
+	m3.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
+	sea.model = m3;
+	sea.texture = new Texture();
+	sea.texture->load("data/sea.tga");
 }
 
 Player::Player() {
@@ -84,7 +95,26 @@ void Ship::move(float dt) {
 	}
 }
 
+void Sea::render()
+{
 
+	glLineWidth(1);
+	glEnable(GL_BLEND);
+	glDepthMask(false);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	shader->enable();
+
+	shader->setUniform("u_color", color);
+	shader->setUniform("u_model", model);
+	shader->setUniform("u_camera_position", Camera::current->eye);
+	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
+	shader->setUniform("u_texture", texture, 0);
+	shader->setUniform("u_time", Game::instance->time);
+	mesh->render(GL_TRIANGLES);
+	glDisable(GL_BLEND);
+	glDepthMask(true);
+	shader->disable();
+}
 
 //PLAYSTAGE METHODS
 void PlayStage::render() {
@@ -107,6 +137,7 @@ void PlayStage::render() {
 
 	//Draw the floor grid
 	drawGrid();
+	Scene::world->sea.render();
 
 	//render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);

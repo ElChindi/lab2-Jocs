@@ -14,6 +14,7 @@
 //Globals
 
 //Enums
+enum eRotation { clock, anticlock };
 
 //Structs
 
@@ -51,7 +52,7 @@ class EntityMesh : public Entity
         void update(float dt) {};
 };
 
-enum eRotation{clock,anticlock};
+
 
 class Ship : public EntityMesh
 {
@@ -88,13 +89,12 @@ public:
     bool onShip;
 
     Player();
-    //void movePlayer();
 };
 
 class Sea : public EntityMesh
 {
 public:
-    
+    Sea() {};
     void render();
 
 };
@@ -122,6 +122,7 @@ public:
     EntityMesh cube;
     EntityMesh ship;
     Player* player;
+    Sea sea;
     
     static Scene* getInstance() {
         if (!world) {
