@@ -14,7 +14,7 @@
 //Globals
 
 //Enums
-enum eRotation { clock, anticlock };
+enum eRotation { eclock, antieclock };
 
 //Structs
 

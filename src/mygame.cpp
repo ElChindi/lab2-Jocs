@@ -40,7 +40,7 @@ Scene::Scene() {
 	
 	sea = Sea();
 	sea.mesh = new Mesh();
-	sea.mesh->createPlane(1000);
+	sea.mesh->createPlane(15);
 	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	sea.color = Vector4(1, 1, 1, 1);
 	Matrix44 m3;
@@ -82,7 +82,7 @@ void Ship::reduceVelocity(float dt) {
 }
 
 void Ship::rotate(float dt, eRotation rot) {
-	if(rot == clock)
+	if(rot == eclock)
 		model.rotate(1*dt, Vector3(0, 1, 0));
 	else
 		model.rotate(-1*dt, Vector3(0, 1, 0));
@@ -150,8 +150,8 @@ void PlayStage::update(double dt) {
 
 	if (Input::isKeyPressed(SDL_SCANCODE_W)) Scene::world->player->ship->increaseVelocity(dt);
 	if (Input::isKeyPressed(SDL_SCANCODE_S)) Scene::world->player->ship->reduceVelocity(dt);
-	if (Input::isKeyPressed(SDL_SCANCODE_A)) Scene::world->player->ship->rotate(dt, anticlock);
-	if (Input::isKeyPressed(SDL_SCANCODE_D)) Scene::world->player->ship->rotate(dt, clock);
+	if (Input::isKeyPressed(SDL_SCANCODE_A)) Scene::world->player->ship->rotate(dt, antieclock);
+	if (Input::isKeyPressed(SDL_SCANCODE_D)) Scene::world->player->ship->rotate(dt, eclock);
 }
 
 //ENTITY METHODS
