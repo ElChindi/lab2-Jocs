@@ -51,15 +51,7 @@ class EntityMesh : public Entity
         void update(float dt) {};
 };
 
-class Player
-{
-public:
-    Ship* ship;
-
-    Player();
-    //void move
-
-};
+enum eRotation{clock,anticlock};
 
 class Ship : public EntityMesh
 {
@@ -67,6 +59,8 @@ public:
     static std::vector<Ship*> ships;
 
     char type;
+    float maxVelocity;
+    float currentVelocity;
 
     Ship() {
         ships.push_back(this);
@@ -78,8 +72,23 @@ public:
         ships.erase(it);
     }
 
+    void increaseVelocity(float dt);
+    void reduceVelocity(float dt);
+    void rotate(float dt, eRotation rot);
+    void move(float dt);
+
     static void renderAll();
     static void updateAll(float dt);
+};
+
+class Player
+{
+public:
+    Ship* ship;
+    bool onShip;
+
+    Player();
+    //void movePlayer();
 };
 
 class Sea : public EntityMesh
@@ -112,6 +121,7 @@ public:
 
     EntityMesh cube;
     EntityMesh ship;
+    Player* player;
     
     static Scene* getInstance() {
         if (!world) {

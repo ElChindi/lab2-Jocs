@@ -19,6 +19,7 @@ Shader* shader1 = NULL;
 float angle1 = 0;
 
 Scene* Scene::world = NULL;
+std::vector<Ship*> Ship::ships;
 
 
 
@@ -35,19 +36,53 @@ Scene::Scene() {
 	cube.shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture.fs");
 	cube.color = Vector4(1,1,1,1);
 	
-	ship = EntityMesh();
-	Matrix44 m2;
-	m2.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	ship.model = m2;
-	ship.texture = new Texture();
-	ship.texture->load("data/ship_light_cannon.tga");
-	ship.mesh = Mesh::Get("data/ship_light_cannon.obj");
-	ship.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-	ship.color = Vector4(1, 1, 1, 1);
-
+	player = new Player();
+	
 }
 
+Player::Player() {
+	ship = new Ship();
+	ship->maxVelocity = 50;
+	ship->currentVelocity = 0;
+	onShip = true;
 
+	Matrix44 m;
+	m.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
+	ship->model = m;
+	ship->texture = new Texture();
+	ship->texture->load("data/ship_light_cannon.tga");
+	ship->mesh = Mesh::Get("data/ship_light_cannon.obj");
+	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	ship->color = Vector4(1, 1, 1, 1);
+}
+
+//void Player::movePlayer() {
+//
+//}
+
+void Ship::increaseVelocity(float dt) {
+	currentVelocity = clamp(currentVelocity + dt * 10, 0, maxVelocity);
+	//model.translate(0, 0, -dt * currentVelocity);
+}
+
+void Ship::reduceVelocity(float dt) {
+	currentVelocity = clamp(currentVelocity - dt * 10, 0, maxVelocity);
+	//model.translate(0, 0, -dt * currentVelocity);
+}
+
+void Ship::rotate(float dt, eRotation rot) {
+	if(rot == clock)
+		model.rotate(1*dt, Vector3(0, 1, 0));
+	else
+		model.rotate(-1*dt, Vector3(0, 1, 0));
+}
+
+void Ship::move(float dt) {
+	if (currentVelocity > 0) {
+		model.translate(0, 0, -dt * currentVelocity);
+		currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
+	}
+}
 
 
 
@@ -68,7 +103,7 @@ void PlayStage::render() {
 	glDisable(GL_CULL_FACE);
 
 
-	Scene::world->ship.render();
+	Scene::world->player->ship->render();
 
 	//Draw the floor grid
 	drawGrid();
@@ -80,7 +115,12 @@ void PlayStage::render() {
 
 void PlayStage::update(double dt) {
 	
+	Scene::world->player->ship->move(dt);
 
+	if (Input::isKeyPressed(SDL_SCANCODE_W)) Scene::world->player->ship->increaseVelocity(dt);
+	if (Input::isKeyPressed(SDL_SCANCODE_S)) Scene::world->player->ship->reduceVelocity(dt);
+	if (Input::isKeyPressed(SDL_SCANCODE_A)) Scene::world->player->ship->rotate(dt, anticlock);
+	if (Input::isKeyPressed(SDL_SCANCODE_D)) Scene::world->player->ship->rotate(dt, clock);
 }
 
 //ENTITY METHODS
