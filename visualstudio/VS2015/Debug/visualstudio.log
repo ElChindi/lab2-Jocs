@@ -3,11 +3,11 @@ C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\framework.h(372,105): warning C424
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(31,18): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(48,19): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(61,18): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(149,35): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(151,88): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(152,86): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(153,78): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(150,35): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(152,88): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(153,86): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(154,78): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(155,78): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
 animation.obj : warning LNK4075: se omite '/EDITANDCONTINUE' debido a la especificación '/INCREMENTAL:NO'
 LINK : warning LNK4098: la biblioteca predeterminada'LIBCMT' entra en conflicto con otras bibliotecas; use la biblioteca /NODEFAULTLIB:biblioteca
 glew32s.lib(glew.obj) : warning LNK4099: no se encontró PDB 'vc120.pdb' con 'glew32s.lib(glew.obj)' o en 'C:\Users\dquin\Documents\GitHub\lab2-Jocs\vc120.pdb'; se vinculará el objeto sin tener en cuenta información de depuración

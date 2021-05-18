@@ -40,8 +40,8 @@ Scene::Scene() {
 	
 	sea = Sea();
 	sea.mesh = new Mesh();
-	sea.mesh->createPlane(15);
-	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	sea.mesh->createPlane(20);
+	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
 	sea.color = Vector4(1, 1, 1, 1);
 	Matrix44 m3;
 	//m3.translate(floor(Camera::current->eye.x / 100.0) * 100.0f, 0.0f, floor(Camera::current->eye.z / 100.0f) * 100.0f);
@@ -110,6 +110,7 @@ void Sea::render()
 	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
 	shader->setUniform("u_texture", texture, 0);
 	shader->setUniform("u_time", Game::instance->time);
+	shader->setUniform("u_texture_tiling", (float)5);
 	mesh->render(GL_TRIANGLES);
 	glDisable(GL_BLEND);
 	glDepthMask(true);
