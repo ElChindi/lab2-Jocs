@@ -99,6 +99,14 @@ public:
 
 };
 
+class Skybox : public EntityMesh
+{
+public:
+    Skybox();
+    void render();
+
+};
+
 
 //----------------------------------------STAGES----------------------------------------//
 class Stage {
@@ -123,6 +131,8 @@ public:
     EntityMesh ship;
     Player* player;
     Sea sea;
+    Skybox sky;
+    
     
     static Scene* getInstance() {
         if (!world) {

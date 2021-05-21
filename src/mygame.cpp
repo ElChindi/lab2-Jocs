@@ -49,6 +49,8 @@ Scene::Scene() {
 	sea.model = m3;
 	sea.texture = new Texture();
 	sea.texture->load("data/sea.tga");
+
+	sky = Skybox();
 }
 
 Player::Player() {
@@ -65,6 +67,19 @@ Player::Player() {
 	ship->mesh = Mesh::Get("data/ship_light_cannon.obj");
 	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	ship->color = Vector4(1, 1, 1, 1);
+}
+
+Skybox::Skybox() {
+	mesh = Mesh::Get("data/cielo.ASE");
+	texture = Texture::Get("data/cielo.tga");
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	color = Vector4(1, 1, 1, 1);
+}
+
+void Skybox::render() {
+	model = Matrix44();
+	model.translate(Camera::current->eye.x, Camera::current->eye.y, Camera::current->eye.z);
+	EntityMesh::render();
 }
 
 //void Player::movePlayer() {
@@ -133,7 +148,7 @@ void PlayStage::render() {
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-
+	Scene::world->sky.render();
 	Scene::world->player->ship->render();
 
 	//Draw the floor grid
