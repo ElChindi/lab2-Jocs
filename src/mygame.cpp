@@ -40,9 +40,9 @@ Scene::Scene() {
 	
 	sea = Sea();
 	sea.mesh = new Mesh();
-	sea.mesh->createPlane(20);
+	sea.mesh->createPlane(10000);
 	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
-	sea.color = Vector4(1, 1, 1, 1);
+	sea.color = Vector4(1, 1, 1, 0.8);
 	Matrix44 m3;
 	//m3.translate(floor(Camera::current->eye.x / 100.0) * 100.0f, 0.0f, floor(Camera::current->eye.z / 100.0f) * 100.0f);
 	m3.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
@@ -55,7 +55,7 @@ Scene::Scene() {
 
 Player::Player() {
 	ship = new Ship();
-	ship->maxVelocity = 50;
+	ship->maxVelocity = 30;
 	ship->currentVelocity = 0;
 	onShip = true;
 
@@ -78,7 +78,8 @@ Skybox::Skybox() {
 
 void Skybox::render() {
 	model = Matrix44();
-	model.translate(Camera::current->eye.x, Camera::current->eye.y, Camera::current->eye.z);
+	model.scale(100, 100, 100);
+	model.translate(Camera::current->eye.x/100, Camera::current->eye.y/100, Camera::current->eye.z/100);
 	EntityMesh::render();
 }
 
@@ -125,7 +126,7 @@ void Sea::render()
 	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
 	shader->setUniform("u_texture", texture, 0);
 	shader->setUniform("u_time", Game::instance->time);
-	shader->setUniform("u_texture_tiling", (float)5);
+	shader->setUniform("u_texture_tiling", (float)300);
 	mesh->render(GL_TRIANGLES);
 	glDisable(GL_BLEND);
 	glDepthMask(true);
@@ -149,6 +150,7 @@ void PlayStage::render() {
 	glDisable(GL_CULL_FACE);
 
 	Scene::world->sky.render();
+	
 	Scene::world->player->ship->render();
 
 	//Draw the floor grid
