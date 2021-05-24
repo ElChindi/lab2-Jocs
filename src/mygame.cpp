@@ -35,6 +35,30 @@ Scene::Scene() {
 	cube.mesh = Mesh::Get("data/box.ASE");
 	cube.shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture.fs");
 	cube.color = Vector4(1,1,1,1);
+
+
+	// Using cubes as obstacles (replace with isles then)
+	EntityMesh* cube1 = new EntityMesh();
+	Matrix44 m1;
+	m1.translate(-100, 0, -100);
+	cube1->model = m1;
+	cube1->texture = new Texture();
+	cube1->texture->load("data/texture.tga");
+	cube1->mesh = Mesh::Get("data/box.ASE");
+	cube1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	cube1->color = Vector4(1, 1, 1, 1);
+	cubes.push_back(cube1);
+
+	EntityMesh* cube2 = new EntityMesh();
+	Matrix44 m2;
+	m2.translate(0, -30, -150);
+	cube2->model = m2;
+	cube2->texture = new Texture();
+	cube2->texture->load("data/texture.tga");
+	cube2->mesh = Mesh::Get("data/box.ASE");
+	cube2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	cube2->color = Vector4(1, 1, 1, 1);
+	cubes.push_back(cube2);
 	
 	player = new Player();
 	
@@ -108,6 +132,18 @@ void Ship::move(float dt) {
 	if (currentVelocity > 0) {
 		model.translate(0, 0, -dt * currentVelocity);
 		currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
+
+		//Check collisions
+		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1, 0);
+		for (EntityMesh* cube : Scene::world->cubes) {
+			Vector3 coll;
+			Vector3 collnorm;
+			if (!cube->mesh->testSphereCollision(cube->model, targetCenter, 3, coll, collnorm))
+				continue;
+
+			Vector3 push_away = normalize(coll - targetCenter) * dt * currentVelocity;
+			model.translateGlobal(-push_away.x, 0, -push_away.z);
+		}
 	}
 }
 
@@ -152,6 +188,10 @@ void PlayStage::render() {
 	Scene::world->sky.render();
 	
 	Scene::world->player->ship->render();
+
+	for (EntityMesh* cube : Scene::world->cubes) {
+		cube->render();
+	}
 
 	//Draw the floor grid
 	drawGrid();
