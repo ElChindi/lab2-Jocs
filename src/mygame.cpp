@@ -40,15 +40,16 @@ Scene::Scene() {
 	// Using cubes as obstacles (replace with isles then)
 	EntityMesh* cube1 = new EntityMesh();
 	Matrix44 m1;
-	m1.translate(-100, 0, -100);
+	m1.translate(-100, -4, -100);
+	m1.scale(10, 10, 10);
 	cube1->model = m1;
 	cube1->texture = new Texture();
-	cube1->texture->load("data/texture.tga");
-	cube1->mesh = Mesh::Get("data/box.ASE");
+	cube1->texture->load("data/isla1.tga");
+	cube1->mesh = Mesh::Get("data/isla1.obj");
 	cube1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	cube1->color = Vector4(1, 1, 1, 1);
 	cubes.push_back(cube1);
-
+	/*
 	EntityMesh* cube2 = new EntityMesh();
 	Matrix44 m2;
 	m2.translate(0, -30, -150);
@@ -59,7 +60,7 @@ Scene::Scene() {
 	cube2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	cube2->color = Vector4(1, 1, 1, 1);
 	cubes.push_back(cube2);
-	
+	*/
 	player = new Player();
 	
 	sea = Sea();
@@ -138,10 +139,13 @@ void Ship::move(float dt) {
 		for (EntityMesh* cube : Scene::world->cubes) {
 			Vector3 coll;
 			Vector3 collnorm;
-			if (!cube->mesh->testSphereCollision(cube->model, targetCenter, 3, coll, collnorm))
+			float scale = cube->model._11; //Suposing the scale is the same in xyz
+			if (!cube->mesh->testSphereCollision(cube->model, targetCenter, 3/scale, coll, collnorm))
 				continue;
 
-			Vector3 push_away = normalize(coll - targetCenter) * dt * currentVelocity;
+			if(currentVelocity > 5) 
+				currentVelocity = clamp(currentVelocity - dt * 100, 5, maxVelocity);
+			Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.00001, coll.z - targetCenter.z)) * dt * currentVelocity * 1.5;
 			model.translateGlobal(-push_away.x, 0, -push_away.z);
 		}
 	}
