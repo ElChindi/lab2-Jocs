@@ -33,7 +33,7 @@ Scene::Scene() {
 	cube.texture = new Texture();
 	cube.texture->load("data/texture.tga");
 	cube.mesh = Mesh::Get("data/box.ASE");
-	cube.shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture.fs");
+	cube.shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture_phong.fs");
 	cube.color = Vector4(1,1,1,1);
 
 
@@ -46,7 +46,7 @@ Scene::Scene() {
 	cube1->texture = new Texture();
 	cube1->texture->load("data/islas/1.tga");
 	cube1->mesh = Mesh::Get("data/islas/1.obj");
-	cube1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	cube1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
 	cube1->color = Vector4(1, 1, 1, 1);
 	isles.push_back(cube1);
 	/*
@@ -90,7 +90,7 @@ Player::Player() {
 	ship->texture = new Texture();
 	ship->texture->load("data/ship_light_cannon.tga");
 	ship->mesh = Mesh::Get("data/ship_light_cannon.obj");
-	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
 	ship->color = Vector4(1, 1, 1, 1);
 }
 
@@ -203,7 +203,7 @@ void PlayStage::render() {
 	//camera follows ship with lerp
 	Vector3 oldEye = Game::instance->camera->eye;
 	Vector3 oldCenter = Game::instance->camera->eye;
-	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 30) - oldEye) * 0.01 + oldEye;
+	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 20) - oldEye) * 0.03 + oldEye;
 	Vector3 newCenter = (Scene::world->player->ship->model * Vector3(0, 0, -20) - oldCenter) * 0.1 + oldCenter;
 	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 	
