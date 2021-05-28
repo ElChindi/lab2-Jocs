@@ -200,6 +200,14 @@ void PlayStage::render() {
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
+	//camera follows ship with lerp
+	Vector3 oldEye = Game::instance->camera->eye;
+	Vector3 oldCenter = Game::instance->camera->eye;
+	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 30) - oldEye) * 0.01 + oldEye;
+	Vector3 newCenter = (Scene::world->player->ship->model * Vector3(0, 0, -20) - oldCenter) * 0.1 + oldCenter;
+	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
+	
+	
 	Scene::world->sky.render();
 	
 	Scene::world->player->ship->render();
