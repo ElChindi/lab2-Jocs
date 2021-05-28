@@ -1,6 +1,7 @@
 ﻿  mygame.cpp
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 C:\Users\marco\Documents\GitHub\lab2-Jocs\src\framework.h(372,105): warning C4244: 'return': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(31,18): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(70,34): warning C4305: 'argumento': truncamiento de 'double' a 'float'
@@ -17,6 +18,8 @@ C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(235,78): warning C4244:
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\framework.h(372,105): warning C4244: 'return': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(31,18): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(70,34): warning C4305: 'argumento': truncamiento de 'double' a 'float'
@@ -29,6 +32,9 @@ C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(214,86): warning C4244:
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(215,78): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(216,78): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
