@@ -40,12 +40,12 @@ Scene::Scene() {
 	// Using cubes as obstacles (replace with isles then)
 	EntityMesh* cube1 = new EntityMesh();
 	Matrix44 m1;
-	m1.translate(-100, -4, -100);
-	m1.scale(10, 10, 10);
+	m1.translate(-70, -1, -70);
+	m1.scale(30, 30, 30);
 	cube1->model = m1;
 	cube1->texture = new Texture();
-	cube1->texture->load("data/isla1.tga");
-	cube1->mesh = Mesh::Get("data/isla1.obj");
+	cube1->texture->load("data/islas/1.tga");
+	cube1->mesh = Mesh::Get("data/islas/1.obj");
 	cube1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	cube1->color = Vector4(1, 1, 1, 1);
 	isles.push_back(cube1);
@@ -177,7 +177,7 @@ void Sea::render()
 	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
 	shader->setUniform("u_texture", texture, 0);
 	shader->setUniform("u_time", Game::instance->time);
-	shader->setUniform("u_texture_tiling", (float)300);
+	shader->setUniform("u_texture_tiling", (float)500);
 	mesh->render(GL_TRIANGLES);
 	glDisable(GL_BLEND);
 	glDepthMask(true);
@@ -251,6 +251,7 @@ void EntityMesh::render()
 	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 	shader->setUniform("u_texture", texture, 0);
 	shader->setUniform("u_time", Game::instance->time);
+	shader->setUniform("u_eye", camera->eye);
 
 	//render the mesh using the shader
 	mesh->render(GL_TRIANGLES);
