@@ -48,7 +48,7 @@ Scene::Scene() {
 	cube1->mesh = Mesh::Get("data/isla1.obj");
 	cube1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	cube1->color = Vector4(1, 1, 1, 1);
-	cubes.push_back(cube1);
+	isles.push_back(cube1);
 	/*
 	EntityMesh* cube2 = new EntityMesh();
 	Matrix44 m2;
@@ -65,7 +65,7 @@ Scene::Scene() {
 	
 	sea = Sea();
 	sea.mesh = new Mesh();
-	sea.mesh->createPlane(10000);
+	sea.mesh->createPlane(5000);
 	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
 	sea.color = Vector4(1, 1, 1, 0.8);
 	Matrix44 m3;
@@ -136,11 +136,11 @@ void Ship::move(float dt) {
 
 		//Check collisions
 		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1, 0);
-		for (EntityMesh* cube : Scene::world->cubes) {
+		for (EntityMesh* isle : Scene::world->isles) {
 			Vector3 coll;
 			Vector3 collnorm;
-			float scale = cube->model._11; //Suposing the scale is the same in xyz
-			if (!cube->mesh->testSphereCollision(cube->model, targetCenter, 3/scale, coll, collnorm))
+			float scale = isle->model._11; //Suposing the scale is the same in xyz
+			if (!isle->mesh->testSphereCollision(isle->model, targetCenter, 3/scale, coll, collnorm))
 				continue;
 
 			if(currentVelocity > 5) 
@@ -148,6 +148,17 @@ void Ship::move(float dt) {
 			Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.00001, coll.z - targetCenter.z)) * dt * currentVelocity * 1.5;
 			model.translateGlobal(-push_away.x, 0, -push_away.z);
 		}
+		//Let it within the world
+		targetCenter = model.getTranslation() + Vector3(0, 1, 0);
+		if (targetCenter.x < -2000)
+			model.translateGlobal(-targetCenter.x - 2000, 0, 0);
+		if (targetCenter.x > 2000)
+			model.translateGlobal(-targetCenter.x + 2000, 0, 0);
+		if (targetCenter.z < -2000)
+			model.translateGlobal(0, 0, -targetCenter.z - 2000);
+		if (targetCenter.z > 2000)
+			model.translateGlobal(0, 0, -targetCenter.z + 2000);
+
 	}
 }
 
@@ -193,8 +204,8 @@ void PlayStage::render() {
 	
 	Scene::world->player->ship->render();
 
-	for (EntityMesh* cube : Scene::world->cubes) {
-		cube->render();
+	for (EntityMesh* isle : Scene::world->isles) {
+		isle->render();
 	}
 
 	//Draw the floor grid

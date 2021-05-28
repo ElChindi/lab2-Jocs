@@ -128,7 +128,7 @@ public:
     Scene();
 
     EntityMesh cube;
-    std::vector<EntityMesh*> cubes;
+    std::vector<EntityMesh*> isles;
 
     EntityMesh ship;
     Player* player;
