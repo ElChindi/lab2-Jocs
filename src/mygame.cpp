@@ -199,14 +199,6 @@ void PlayStage::render() {
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-
-	//camera follows ship with lerp
-	Vector3 oldEye = Game::instance->camera->eye;
-	Vector3 oldCenter = Game::instance->camera->eye;
-	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 20) - oldEye) * 0.03 + oldEye;
-	Vector3 newCenter = (Scene::world->player->ship->model * Vector3(0, 0, -20) - oldCenter) * 0.1 + oldCenter;
-	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
-	
 	
 	Scene::world->sky.render();
 	
@@ -233,6 +225,14 @@ void PlayStage::update(double dt) {
 	if (Input::isKeyPressed(SDL_SCANCODE_S)) Scene::world->player->ship->reduceVelocity(dt);
 	if (Input::isKeyPressed(SDL_SCANCODE_A)) Scene::world->player->ship->rotate(dt, antieclock);
 	if (Input::isKeyPressed(SDL_SCANCODE_D)) Scene::world->player->ship->rotate(dt, eclock);
+
+	//camera follows ship with lerp
+
+	Vector3 oldEye = Game::instance->camera->eye;
+	Vector3 oldCenter = Game::instance->camera->eye;
+	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 20) - oldEye) * 0.03 * dt * 100 + oldEye;
+	Vector3 newCenter = (Scene::world->player->ship->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 100 + oldCenter;
+	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 }
 
 //ENTITY METHODS
