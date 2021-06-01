@@ -29,7 +29,7 @@ public:
 	bool must_exit;
 
 	//stages
-	PlayStage* playStage;
+	SeaStage* seaStage;
 
 	//some vars
 	Camera* camera; //our global camera

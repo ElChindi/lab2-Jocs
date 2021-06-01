@@ -40,12 +40,12 @@ Scene::Scene() {
 	// Using cubes as obstacles (replace with isles then)
 	EntityMesh* cube1 = new EntityMesh();
 	Matrix44 m1;
-	m1.translate(-70, -1, -70);
+	m1.translate(-100, -1, -100);
 	m1.scale(30, 30, 30);
 	cube1->model = m1;
 	cube1->texture = new Texture();
-	cube1->texture->load("data/islas/1.tga");
-	cube1->mesh = Mesh::Get("data/islas/1.obj");
+	cube1->texture->load("data/islas/2.tga");
+	cube1->mesh = Mesh::Get("data/islas/2.obj");
 	cube1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
 	cube1->color = Vector4(1, 1, 1, 1);
 	isles.push_back(cube1);
@@ -92,6 +92,16 @@ Player::Player() {
 	ship->mesh = Mesh::Get("data/ship_light_cannon.obj");
 	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
 	ship->color = Vector4(1, 1, 1, 1);
+
+	pirate = new EntityMesh();
+	Matrix44 m1;
+	m1.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
+	ship->model = m1;
+	ship->texture = new Texture();
+	ship->texture->load("data/pirate.tga");
+	ship->mesh = Mesh::Get("data/pirate.obj");
+	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
+	ship->color = Vector4(1, 1, 1, 1);
 }
 
 Skybox::Skybox() {
@@ -107,10 +117,6 @@ void Skybox::render() {
 	model.translate(Camera::current->eye.x/100, Camera::current->eye.y/100, Camera::current->eye.z/100);
 	EntityMesh::render();
 }
-
-//void Player::movePlayer() {
-//
-//}
 
 void Ship::increaseVelocity(float dt) {
 	currentVelocity = clamp(currentVelocity + dt * 10, 0, maxVelocity);
@@ -145,8 +151,8 @@ void Ship::move(float dt) {
 
 			if(currentVelocity > 5) 
 				currentVelocity = clamp(currentVelocity - dt * 100, 5, maxVelocity);
-			Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.00001, coll.z - targetCenter.z)) * dt * currentVelocity * 1.5;
-			model.translateGlobal(-push_away.x, 0, -push_away.z);
+			Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity  ;
+			model.translateGlobal(-push_away.x*2, 0, -push_away.z*2);
 		}
 		//Let it within the world
 		targetCenter = model.getTranslation() + Vector3(0, 1, 0);
@@ -184,8 +190,8 @@ void Sea::render()
 	shader->disable();
 }
 
-//PLAYSTAGE METHODS
-void PlayStage::render() {
+//SeaStage METHODS
+void SeaStage::render() {
 	//set the clear color (the background color)
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -217,7 +223,7 @@ void PlayStage::render() {
 
 }
 
-void PlayStage::update(double dt) {
+void SeaStage::update(double dt) {
 	
 	Scene::world->player->ship->move(dt);
 

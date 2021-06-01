@@ -87,6 +87,7 @@ class Player
 public:
     Ship* ship;
     bool onShip;
+    EntityMesh* pirate;
 
     Player();
 };
@@ -115,10 +116,11 @@ public:
 	virtual void update(double dt) {};
 };
 
-class PlayStage : public Stage {
+class SeaStage : public Stage {
 public:
 	virtual void render();
 	virtual void update(double dt);
+
 };
 
 //----------------------------------------Scene----------------------------------------//
