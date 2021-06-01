@@ -13,15 +13,15 @@ uniform vec3 u_eye;
 void main()
 {
 
-	float p = 0.1;
-	vec3 ka = vec3(0.9, 0.9, 0.9);
-	vec3 kd = vec3(0.6, 0.6, 0.6);
+	float p = 0.2;
+	vec3 ka = vec3(1, 1, 1);
+	vec3 kd = vec3(0.7, 0.6, 0.6);
 	vec3 ks = vec3(0.1, 0.1, 0.1);
 
-	vec3 id = vec3(0.4, 0.4, 0.4);
-	vec3 is = vec3(0.1, 0.1, 0.1);
-	vec3 ia = vec3(0.9, 0.9, 0.9);
-	vec3 lp = v_position - vec3(2.0, 0.0, 5.0);;
+	vec3 id = vec3(0.7, 0.6, 0.6);
+	vec3 is = vec3(0.3, 0.3, 0.3);
+	vec3 ia = vec3(1, 1, 1);
+	vec3 lp = v_position - vec3(10.0, 0.0, 50.0);;
 
 	//here we set up the normal as a color to see them as a debug
 	vec3 c = v_normal;
