@@ -93,13 +93,13 @@ public:
     void comeAshore() 
         // Switches game stage from SeaStage to LandStage
     {
-        if (ship->currentVelocity < 0.1) 
+        if (ship->currentVelocity < 0.1) //to be adjusted
         {
             Vector3 SpawnPosition = getPlayerSpawn();
-            if (SpawnPosition.x != NULL)
+            if (SpawnPosition.x != NULL) //if doesn't find anything
             {
                 pirate->model.translate(SpawnPosition.x, SpawnPosition.y, SpawnPosition.z);
-                Scene::world->changeStage(1);
+                Scene::world->changeStage(1); //doesn't exist yet
             };
         }
     };
