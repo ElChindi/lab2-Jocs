@@ -9,7 +9,6 @@
 #include "texture.h"
 #include "shader.h"
 #include "animation.h"
-#include "game.h"
 
 
 //Globals
