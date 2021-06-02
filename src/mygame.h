@@ -90,6 +90,25 @@ public:
     EntityMesh* pirate;
 
     Player();
+    void comeAshore() 
+        // Switches game stage from SeaStage to LandStage
+    {
+        if (ship->currentVelocity < 0.1) 
+        {
+            Vector3 SpawnPosition = getPlayerSpawn();
+            if (SpawnPosition.x != NULL)
+            {
+                pirate->model.translate(SpawnPosition.x, SpawnPosition.y, SpawnPosition.z);
+                Scene::world->changeStage(1);
+            };
+        }
+    };
+
+    Vector3 getPlayerSpawn() 
+        // Finds a place where the player can spawn in the isle
+    {
+
+    };
 };
 
 class Sea : public EntityMesh
@@ -129,6 +148,8 @@ public:
     static Scene* world;
     Scene();
 
+    Game* game = Game::instance;
+
     EntityMesh cube;
     std::vector<EntityMesh*> isles;
 
@@ -145,6 +166,9 @@ public:
         return world;
     }
     
+    void changeStage(int state) {
+        game->current_stage = state;
+    }
 
    
 

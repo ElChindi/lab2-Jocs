@@ -29,7 +29,13 @@ public:
 	bool must_exit;
 
 	//stages
-	SeaStage* seaStage;
+	std::vector<Stage*> stages;
+	void InitStages() {
+		stages.reserve(2);
+		stages.push_back(new SeaStage());
+	};
+
+	int current_stage;
 
 	//some vars
 	Camera* camera; //our global camera

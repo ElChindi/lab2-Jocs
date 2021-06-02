@@ -25,8 +25,8 @@ std::vector<Ship*> Ship::ships;
 
 Scene::Scene() {
 	//load one texture without using the Texture Manager (Texture::Get would use the manager)
-
-	cube = EntityMesh();
+	//debug object (not in use)
+	/*cube = EntityMesh();
 	Matrix44 m;
 	m.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
 	cube.model = m;
@@ -34,10 +34,10 @@ Scene::Scene() {
 	cube.texture->load("data/texture.tga");
 	cube.mesh = Mesh::Get("data/box.ASE");
 	cube.shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture_phong.fs");
-	cube.color = Vector4(1,1,1,1);
+	cube.color = Vector4(1,1,1,1);*/
 
 
-	// Using cubes as obstacles (replace with isles then)
+	// Using cubes as name (replace with isles then)
 	EntityMesh* cube1 = new EntityMesh();
 	Matrix44 m1;
 	m1.translate(-100, -1, -100);
@@ -49,32 +49,23 @@ Scene::Scene() {
 	cube1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
 	cube1->color = Vector4(1, 1, 1, 1);
 	isles.push_back(cube1);
-	/*
-	EntityMesh* cube2 = new EntityMesh();
-	Matrix44 m2;
-	m2.translate(0, -30, -150);
-	cube2->model = m2;
-	cube2->texture = new Texture();
-	cube2->texture->load("data/texture.tga");
-	cube2->mesh = Mesh::Get("data/box.ASE");
-	cube2->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-	cube2->color = Vector4(1, 1, 1, 1);
-	cubes.push_back(cube2);
-	*/
+
+	//Initialize Player
 	player = new Player();
 	
+	//Initialize Sea
 	sea = Sea();
 	sea.mesh = new Mesh();
 	sea.mesh->createPlane(5000);
 	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
 	sea.color = Vector4(1, 1, 1, 0.8);
 	Matrix44 m3;
-	//m3.translate(floor(Camera::current->eye.x / 100.0) * 100.0f, 0.0f, floor(Camera::current->eye.z / 100.0f) * 100.0f);
 	m3.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
 	sea.model = m3;
 	sea.texture = new Texture();
 	sea.texture->load("data/sea.tga");
 
+	//Initialize Skybox
 	sky = Skybox();
 }
 
@@ -96,12 +87,12 @@ Player::Player() {
 	pirate = new EntityMesh();
 	Matrix44 m1;
 	m1.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	ship->model = m1;
-	ship->texture = new Texture();
-	ship->texture->load("data/pirate.tga");
-	ship->mesh = Mesh::Get("data/pirate.obj");
-	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	ship->color = Vector4(1, 1, 1, 1);
+	pirate->model = m1;
+	pirate->texture = new Texture();
+	pirate->texture->load("data/pirate.tga");
+	pirate->mesh = Mesh::Get("data/pirate.obj");
+	pirate->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
+	pirate->color = Vector4(1, 1, 1, 1);
 }
 
 Skybox::Skybox() {

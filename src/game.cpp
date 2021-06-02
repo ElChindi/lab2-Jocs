@@ -35,7 +35,8 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	mouse_locked = false;
 
 	Scene::getInstance();
-	seaStage = new SeaStage();
+	InitStages();
+	current_stage = 0;
 
 	//OpenGL flags
 	glEnable( GL_CULL_FACE ); //render both sides of every triangle
@@ -63,14 +64,14 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 //what to do when the image has to be draw
 void Game::render(void)
 {
-	seaStage->render();
+	stages[current_stage]->render();
 	//swap between front buffer and back buffer
 	SDL_GL_SwapWindow(this->window);
 }
 
 void Game::update(double seconds_elapsed)
 {
-	seaStage->update(seconds_elapsed);
+	stages[current_stage]->update(seconds_elapsed);
 
 	float speed = seconds_elapsed * mouse_speed; //the speed is defined by the seconds_elapsed so it goes constant
 
