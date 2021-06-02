@@ -22,33 +22,22 @@ Scene* Scene::world = NULL;
 std::vector<Ship*> Ship::ships;
 
 
-
+//----------------------------------------Scene----------------------------------------//
 Scene::Scene() {
 	//load one texture without using the Texture Manager (Texture::Get would use the manager)
-	//debug object (not in use)
-	/*cube = EntityMesh();
-	Matrix44 m;
-	m.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	cube.model = m;
-	cube.texture = new Texture();
-	cube.texture->load("data/texture.tga");
-	cube.mesh = Mesh::Get("data/box.ASE");
-	cube.shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture_phong.fs");
-	cube.color = Vector4(1,1,1,1);*/
-
 
 	// Using cubes as name (replace with isles then)
-	EntityMesh* cube1 = new EntityMesh();
+	testIsle = new EntityMesh();
 	Matrix44 m1;
 	m1.translate(-100, -1, -100);
 	m1.scale(30, 30, 30);
-	cube1->model = m1;
-	cube1->texture = new Texture();
-	cube1->texture->load("data/islas/2.tga");
-	cube1->mesh = Mesh::Get("data/islas/2.obj");
-	cube1->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	cube1->color = Vector4(1, 1, 1, 1);
-	isles.push_back(cube1);
+	testIsle->model = m1;
+	testIsle->texture = new Texture();
+	testIsle->texture->load("data/islas/2.tga");
+	testIsle->mesh = Mesh::Get("data/islas/2.obj");
+	testIsle->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
+	testIsle->color = Vector4(1, 1, 1, 1);
+	isles.push_back(testIsle);
 
 	//Initialize Player
 	player = new Player();
@@ -69,119 +58,7 @@ Scene::Scene() {
 	sky = Skybox();
 }
 
-Player::Player() {
-	ship = new Ship();
-	ship->maxVelocity = 30;
-	ship->currentVelocity = 0;
-	onShip = true;
-
-	Matrix44 m;
-	m.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	ship->model = m;
-	ship->texture = new Texture();
-	ship->texture->load("data/ship_light_cannon.tga");
-	ship->mesh = Mesh::Get("data/ship_light_cannon.obj");
-	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	ship->color = Vector4(1, 1, 1, 1);
-
-	pirate = new EntityMesh();
-	Matrix44 m1;
-	m1.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	pirate->model = m1;
-	pirate->texture = new Texture();
-	pirate->texture->load("data/pirate.tga");
-	pirate->mesh = Mesh::Get("data/pirate.obj");
-	pirate->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	pirate->color = Vector4(1, 1, 1, 1);
-}
-
-Skybox::Skybox() {
-	mesh = Mesh::Get("data/cielo.ASE");
-	texture = Texture::Get("data/cielo.tga");
-	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
-	color = Vector4(1, 1, 1, 1);
-}
-
-void Skybox::render() {
-	model = Matrix44();
-	model.scale(100, 100, 100);
-	model.translate(Camera::current->eye.x/100, Camera::current->eye.y/100, Camera::current->eye.z/100);
-	EntityMesh::render();
-}
-
-void Ship::increaseVelocity(float dt) {
-	currentVelocity = clamp(currentVelocity + dt * 10, 0, maxVelocity);
-	//model.translate(0, 0, -dt * currentVelocity);
-}
-
-void Ship::reduceVelocity(float dt) {
-	currentVelocity = clamp(currentVelocity - dt * 10, 0, maxVelocity);
-	//model.translate(0, 0, -dt * currentVelocity);
-}
-
-void Ship::rotate(float dt, eRotation rot) {
-	if(rot == eclock)
-		model.rotate(1*dt, Vector3(0, 1, 0));
-	else
-		model.rotate(-1*dt, Vector3(0, 1, 0));
-}
-
-void Ship::move(float dt) {
-	if (currentVelocity > 0) {
-		model.translate(0, 0, -dt * currentVelocity);
-		currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
-
-		//Check collisions
-		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1, 0);
-		for (EntityMesh* isle : Scene::world->isles) {
-			Vector3 coll;
-			Vector3 collnorm;
-			float scale = isle->model._11; //Suposing the scale is the same in xyz
-			if (!isle->mesh->testSphereCollision(isle->model, targetCenter, 3/scale, coll, collnorm))
-				continue;
-
-			if(currentVelocity > 5) 
-				currentVelocity = clamp(currentVelocity - dt * 100, 5, maxVelocity);
-			Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity  ;
-			model.translateGlobal(-push_away.x*2, 0, -push_away.z*2);
-		}
-		//Let it within the world
-		targetCenter = model.getTranslation() + Vector3(0, 1, 0);
-		if (targetCenter.x < -2000)
-			model.translateGlobal(-targetCenter.x - 2000, 0, 0);
-		if (targetCenter.x > 2000)
-			model.translateGlobal(-targetCenter.x + 2000, 0, 0);
-		if (targetCenter.z < -2000)
-			model.translateGlobal(0, 0, -targetCenter.z - 2000);
-		if (targetCenter.z > 2000)
-			model.translateGlobal(0, 0, -targetCenter.z + 2000);
-
-	}
-}
-
-void Sea::render()
-{
-
-	glLineWidth(1);
-	glEnable(GL_BLEND);
-	glDepthMask(false);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	shader->enable();
-
-	shader->setUniform("u_color", color);
-	shader->setUniform("u_model", model);
-	shader->setUniform("u_camera_position", Camera::current->eye);
-	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
-	shader->setUniform("u_texture", texture, 0);
-	shader->setUniform("u_time", Game::instance->time);
-	shader->setUniform("u_texture_tiling", (float)500);
-	mesh->render(GL_TRIANGLES);
-	glDisable(GL_BLEND);
-	glDepthMask(true);
-	shader->disable();
-}
-
-//SeaStage METHODS
+//----------------------------------------SEASTAGE----------------------------------------//
 void SeaStage::render() {
 	//set the clear color (the background color)
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -232,7 +109,98 @@ void SeaStage::update(double dt) {
 	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 }
 
-//ENTITY METHODS
+//----------------------------------------Player----------------------------------------//
+Player::Player() {
+	ship = new Ship();
+	ship->maxVelocity = 30;
+	ship->currentVelocity = 0;
+	onShip = true;
+
+	Matrix44 m;
+	m.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
+	ship->model = m;
+	ship->texture = new Texture();
+	ship->texture->load("data/ship_light_cannon.tga");
+	ship->mesh = Mesh::Get("data/ship_light_cannon.obj");
+	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
+	ship->color = Vector4(1, 1, 1, 1);
+
+	pirate = new EntityMesh();
+	Matrix44 m1;
+	m1.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
+	pirate->model = m1;
+	pirate->texture = new Texture();
+	pirate->texture->load("data/pirate.tga");
+	pirate->mesh = Mesh::Get("data/pirate.obj");
+	pirate->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
+	pirate->color = Vector4(1, 1, 1, 1);
+}
+//----------------------------------------Skybox----------------------------------------//
+Skybox::Skybox() {
+	mesh = Mesh::Get("data/cielo.ASE");
+	texture = Texture::Get("data/cielo.tga");
+	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	color = Vector4(1, 1, 1, 1);
+}
+
+void Skybox::render() {
+	model = Matrix44();
+	model.scale(100, 100, 100);
+	model.translate(Camera::current->eye.x / 100, Camera::current->eye.y / 100, Camera::current->eye.z / 100);
+	EntityMesh::render();
+}
+//----------------------------------------Ship----------------------------------------//
+void Ship::increaseVelocity(float dt) {
+	currentVelocity = clamp(currentVelocity + dt * 10, 0, maxVelocity);
+	//model.translate(0, 0, -dt * currentVelocity);
+}
+
+void Ship::reduceVelocity(float dt) {
+	currentVelocity = clamp(currentVelocity - dt * 10, 0, maxVelocity);
+	//model.translate(0, 0, -dt * currentVelocity);
+}
+
+void Ship::rotate(float dt, eRotation rot) {
+	if (rot == eclock)
+		model.rotate(1 * dt, Vector3(0, 1, 0));
+	else
+		model.rotate(-1 * dt, Vector3(0, 1, 0));
+}
+
+void Ship::move(float dt) {
+	if (currentVelocity > 0) {
+		model.translate(0, 0, -dt * currentVelocity);
+		currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
+
+		//Check collisions
+		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1, 0);
+		for (EntityMesh* isle : Scene::world->isles) {
+			Vector3 coll;
+			Vector3 collnorm;
+			float scale = isle->model._11; //Suposing the scale is the same in xyz
+			if (!isle->mesh->testSphereCollision(isle->model, targetCenter, 3 / scale, coll, collnorm))
+				continue;
+
+			if (currentVelocity > 5)
+				currentVelocity = clamp(currentVelocity - dt * 100, 5, maxVelocity);
+			Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity;
+			model.translateGlobal(-push_away.x * 2, 0, -push_away.z * 2);
+		}
+		//Let it within the world
+		targetCenter = model.getTranslation() + Vector3(0, 1, 0);
+		if (targetCenter.x < -2000)
+			model.translateGlobal(-targetCenter.x - 2000, 0, 0);
+		if (targetCenter.x > 2000)
+			model.translateGlobal(-targetCenter.x + 2000, 0, 0);
+		if (targetCenter.z < -2000)
+			model.translateGlobal(0, 0, -targetCenter.z - 2000);
+		if (targetCenter.z > 2000)
+			model.translateGlobal(0, 0, -targetCenter.z + 2000);
+
+	}
+}
+
+//----------------------------------------Entity----------------------------------------//
 void EntityMesh::render()
 {
 	//Check Frustum
@@ -254,5 +222,27 @@ void EntityMesh::render()
 	mesh->render(GL_TRIANGLES);
 
 	//disable the shader after finishing rendering
+	shader->disable();
+}
+//----------------------------------------Sea----------------------------------------//
+void Sea::render()
+{
+
+	glLineWidth(1);
+	glEnable(GL_BLEND);
+	glDepthMask(false);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	shader->enable();
+
+	shader->setUniform("u_color", color);
+	shader->setUniform("u_model", model);
+	shader->setUniform("u_camera_position", Camera::current->eye);
+	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
+	shader->setUniform("u_texture", texture, 0);
+	shader->setUniform("u_time", Game::instance->time);
+	shader->setUniform("u_texture_tiling", (float)500);
+	mesh->render(GL_TRIANGLES);
+	glDisable(GL_BLEND);
+	glDepthMask(true);
 	shader->disable();
 }

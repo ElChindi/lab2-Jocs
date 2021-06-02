@@ -142,6 +142,13 @@ public:
 
 };
 
+class LandStage : public Stage {
+public:
+    virtual void render();
+    virtual void update(double dt);
+
+};
+
 //----------------------------------------Scene----------------------------------------//
 class Scene {
 public:
@@ -150,7 +157,7 @@ public:
 
     Game* game = Game::instance;
 
-    EntityMesh cube;
+    EntityMesh* testIsle;
     std::vector<EntityMesh*> isles;
 
     EntityMesh ship;

@@ -33,6 +33,7 @@ public:
 	void InitStages() {
 		stages.reserve(2);
 		stages.push_back(new SeaStage());
+		stages.push_back(new LandStage());
 	};
 
 	int current_stage;
