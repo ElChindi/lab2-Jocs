@@ -30,6 +30,7 @@ public:
 
 	//stages
 	std::vector<Stage*> stages;
+
 	void InitStages() {
 		stages.reserve(2);
 		stages.push_back(new SeaStage());

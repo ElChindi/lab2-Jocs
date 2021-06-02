@@ -9,6 +9,7 @@
 #include "texture.h"
 #include "shader.h"
 #include "animation.h"
+#include "game.h"
 
 
 //Globals
@@ -99,7 +100,7 @@ public:
             if (SpawnPosition.x != NULL) //if doesn't find anything
             {
                 pirate->model.translate(SpawnPosition.x, SpawnPosition.y, SpawnPosition.z);
-                Scene::world->changeStage(1); //doesn't exist yet
+                //Game::instance->current_stage = 1; //doesn't exist yet
             };
         }
     };
@@ -155,8 +156,6 @@ public:
     static Scene* world;
     Scene();
 
-    Game* game = Game::instance;
-
     EntityMesh* testIsle;
     std::vector<EntityMesh*> isles;
 
@@ -172,12 +171,6 @@ public:
         }
         return world;
     }
-    
-    void changeStage(int state) {
-        game->current_stage = state;
-    }
-
-   
 
 };
 

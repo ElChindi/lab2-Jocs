@@ -76,11 +76,11 @@ void SeaStage::render() {
 	
 	Scene::world->sky.render();
 	
-	Scene::world->player->ship->render();
+	Scene::world->player->ship->render();//cambiar por renderizar all ships
 
 	for (EntityMesh* isle : Scene::world->isles) {
 		isle->render();
-	}
+	}//cambiar por funcion propia dentro de isles
 
 	//Draw the floor grid
 	drawGrid();
@@ -108,7 +108,55 @@ void SeaStage::update(double dt) {
 	Vector3 newCenter = (Scene::world->player->ship->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 100 + oldCenter;
 	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 }
+//----------------------------------------LANDSTAGE----------------------------------------//
+void LandStage::render() {
+	//set the clear color (the background color)
+	glClearColor(0.0, 0.0, 0.0, 1.0);
 
+	// Clear the window and the depth buffer
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//set the camera as default
+	Game::instance->camera->enable();
+
+	//set flags
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+
+	Scene::world->sky.render();
+	Scene::world->player->ship->render();//cambiar por renderizar all ships
+
+	for (EntityMesh* isle : Scene::world->isles) {
+		isle->render();
+	}//cambiar por funcion propia dentro de isles
+
+	//Draw the floor grid
+	drawGrid();
+	Scene::world->sea.render();
+
+	//render the FPS, Draw Calls, etc
+	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
+
+}
+
+void LandStage::update(double dt) {
+
+	Scene::world->player->ship->move(dt);
+
+	if (Input::isKeyPressed(SDL_SCANCODE_W)) Scene::world->player->ship->increaseVelocity(dt);
+	if (Input::isKeyPressed(SDL_SCANCODE_S)) Scene::world->player->ship->reduceVelocity(dt);
+	if (Input::isKeyPressed(SDL_SCANCODE_A)) Scene::world->player->ship->rotate(dt, antieclock);
+	if (Input::isKeyPressed(SDL_SCANCODE_D)) Scene::world->player->ship->rotate(dt, eclock);
+
+	//camera follows ship with lerp
+
+	Vector3 oldEye = Game::instance->camera->eye;
+	Vector3 oldCenter = Game::instance->camera->eye;
+	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 20) - oldEye) * 0.03 * dt * 100 + oldEye;
+	Vector3 newCenter = (Scene::world->player->ship->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 100 + oldCenter;
+	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
+}
 //----------------------------------------Player----------------------------------------//
 Player::Player() {
 	ship = new Ship();
