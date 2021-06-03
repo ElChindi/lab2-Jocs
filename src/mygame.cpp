@@ -154,8 +154,8 @@ void LandStage::update(double dt) {
 
 	Vector3 oldEye = Game::instance->camera->eye;
 	Vector3 oldCenter = Game::instance->camera->eye;
-	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 20) - oldEye) * 0.03 * dt * 100 + oldEye;
-	Vector3 newCenter = (Scene::world->player->ship->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 100 + oldCenter;
+	Vector3 newEye = (Scene::world->player->pirate->model * Vector3(0, 2, 2) - oldEye) * 0.03 * dt * 100 + oldEye;
+	Vector3 newCenter = (Scene::world->player->pirate->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 100 + oldCenter;
 	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 }
 //----------------------------------------Player----------------------------------------//
@@ -190,15 +190,32 @@ void Player::comeAshore()
 {
 	if (ship->currentVelocity < 0.1) //to be adjusted
 	{
-		Vector3 SpawnPosition = getPlayerSpawn();
-		SpawnPosition = ship->model.getTranslation(); //DEBUG
-		if (SpawnPosition.x != NULL) //if doesn't find anything
+		Vector3 spawnPosition;
+		//spawnPosition = ship->model.getTranslation(); //DEBUG
+		if (getPlayerSpawn(spawnPosition)) //if doesn't find anything
 		{
-			pirate->model.translate(SpawnPosition.x, SpawnPosition.y, SpawnPosition.z);
+			pirate->model.translate(spawnPosition.x, spawnPosition.y, spawnPosition.z);
 			Game::instance->current_stage = 1;
 		};
 	}
 };
+
+bool Player::getPlayerSpawn(Vector3& spawnPos) {
+	Vector3 shipPos = ship->model.getTranslation() + Vector3(0,1,0);
+	for (EntityMesh* isle : Scene::world->isles) {
+		Vector3 coll;
+		Vector3 collnorm;
+		float scale = isle->model._11; //Suposing the scale is the same in xyz
+		if (!isle->mesh->testSphereCollision(isle->model, shipPos, 6 / scale, coll, collnorm)) //too far from isle?
+			continue;
+		Vector3 trialSpawn = Vector3(coll.x, 1, coll.z);
+		if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 5, 0), 4 / scale, coll, collnorm)) //player would collide?
+			break;
+		spawnPos = trialSpawn;
+		return true;
+	}
+	return false;//null?
+}
 //----------------------------------------Skybox----------------------------------------//
 Skybox::Skybox() {
 	mesh = Mesh::Get("data/cielo.ASE");
