@@ -192,7 +192,6 @@ Player::Player() {
 	Matrix44 m1;
 	m1.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
 	m1.scale(3, 3, 3);
-	m1.translate(0, floorHeight, 0);
 	pirate->model = m1;
 	pirate->texture = new Texture();
 	pirate->texture->load("data/pirate.tga");
@@ -227,7 +226,7 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 		float scale = isle->model._11; //Suposing the scale is the same in xyz
 		if (!isle->mesh->testSphereCollision(isle->model, shipPos, 6 / scale, coll, collnorm)) //too far from isle?
 			continue;
-		Vector3 trialSpawn = Vector3(coll.x, 1, coll.z);
+		Vector3 trialSpawn = Vector3(coll.x, floorHeight, coll.z);
 		if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 5, 0), 4 / scale, coll, collnorm)) //player would collide?
 			break;
 		spawnPos = trialSpawn;
