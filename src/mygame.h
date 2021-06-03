@@ -101,12 +101,7 @@ public:
     Player();
     void comeAshore();
 
-    Vector3 getPlayerSpawn() 
-        // Finds a place where the player can spawn in the isle
-    {
-        return Vector3(NULL, NULL, NULL);//null?
-    };
-
+    bool getPlayerSpawn(Vector3& spawnPos); // Finds a place where the player can spawn in the isle
 };
 
 class Sea : public EntityMesh
