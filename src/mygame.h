@@ -58,9 +58,9 @@ public:
     float maxVelocity;
     float currentVelocity;
 
-    void increaseVelocity(float dt);
-    void reduceVelocity(float dt);
     void move(float dt);
+    void increaseVelocity(float dt);
+    void rotate(float dt, eRotation rot);
 };
 
 class Ship : public EntityMesh
@@ -96,7 +96,7 @@ class Player
 public:
     Ship* ship;
     bool onShip;
-    EntityMesh* pirate;
+    Humanoid* pirate;
 
     Player();
     void comeAshore();
@@ -106,6 +106,7 @@ public:
     {
         return Vector3(NULL, NULL, NULL);//null?
     };
+
 };
 
 class Sea : public EntityMesh

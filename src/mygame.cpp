@@ -21,6 +21,8 @@ float angle1 = 0;
 Scene* Scene::world = NULL;
 std::vector<Ship*> Ship::ships;
 
+float floorHeight = 0.32;
+
 
 //----------------------------------------Scene----------------------------------------//
 Scene::Scene() {
@@ -143,20 +145,32 @@ void LandStage::render() {
 
 void LandStage::update(double dt) {
 
-	//Scene::world->player->pirate->move(dt);
+	Scene::world->player->pirate->move(dt);
 
-	//if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::gamepads[0].direction & PAD_UP) Scene::world->player->pirate->
-	//if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::gamepads[0].direction & PAD_DOWN) Scene::world->player->pirate->
-	//if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::gamepads[0].direction & PAD_LEFT) Scene::world->player->pirate->
-	//if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::gamepads[0].direction & PAD_RIGHT) Scene::world->player->pirate->
+	if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::gamepads[0].direction & PAD_UP) Scene::world->player->pirate->increaseVelocity(dt);
+	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::gamepads[0].direction & PAD_DOWN) Scene::world->player->pirate->increaseVelocity(dt);
+	if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::gamepads[0].direction & PAD_LEFT) Scene::world->player->pirate->increaseVelocity(dt);
+	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::gamepads[0].direction & PAD_RIGHT) Scene::world->player->pirate->increaseVelocity(dt);
 
-	//camera follows ship with lerp
+	float rightAnalog = Input::gamepads[0].axis[Gamepad::RIGHT_ANALOG_X];
+
+	if (rightAnalog > 0.2) 
+	{ 
+		Scene::world->player->pirate->rotate(dt * 4 * abs(rightAnalog), eclock); 
+	}
+	if (rightAnalog < -0.2) 
+	{
+		Scene::world->player->pirate->rotate(dt * 4 * abs(rightAnalog), antieclock); 
+	}
+
+	//camera follows pirate with lerp
 
 	Vector3 oldEye = Game::instance->camera->eye;
 	Vector3 oldCenter = Game::instance->camera->eye;
-	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 20) - oldEye) * 0.03 * dt * 100 + oldEye;
-	Vector3 newCenter = (Scene::world->player->ship->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 100 + oldCenter;
+	Vector3 newEye = (Scene::world->player->pirate->model * Vector3(0, 3, 3) - oldEye) * 0.03 * dt * 100 + oldEye;
+	Vector3 newCenter = (Scene::world->player->pirate->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 1000 + oldCenter;
 	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
+
 }
 //----------------------------------------Player----------------------------------------//
 Player::Player() {
@@ -174,15 +188,19 @@ Player::Player() {
 	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
 	ship->color = Vector4(1, 1, 1, 1);
 
-	pirate = new EntityMesh();
+	pirate = new Humanoid();
 	Matrix44 m1;
 	m1.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
+	m1.scale(3, 3, 3);
+	m1.translate(0, floorHeight, 0);
 	pirate->model = m1;
 	pirate->texture = new Texture();
 	pirate->texture->load("data/pirate.tga");
 	pirate->mesh = Mesh::Get("data/pirate.obj");
 	pirate->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
 	pirate->color = Vector4(1, 1, 1, 1);
+	pirate->maxVelocity = 4;
+	pirate->currentVelocity = 0;
 }
 
 void Player::comeAshore()
@@ -199,6 +217,8 @@ void Player::comeAshore()
 		};
 	}
 };
+
+
 //----------------------------------------Skybox----------------------------------------//
 Skybox::Skybox() {
 	mesh = Mesh::Get("data/cielo.ASE");
@@ -250,7 +270,7 @@ void Ship::move(float dt) {
 			Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity;
 			model.translateGlobal(-push_away.x * 2, 0, -push_away.z * 2);
 		}
-		//Let it within the world
+		//World border
 		targetCenter = model.getTranslation() + Vector3(0, 1, 0);
 		if (targetCenter.x < -2000)
 			model.translateGlobal(-targetCenter.x - 2000, 0, 0);
@@ -262,6 +282,69 @@ void Ship::move(float dt) {
 			model.translateGlobal(0, 0, -targetCenter.z + 2000);
 
 	}
+}
+//----------------------------------------Humanoid----------------------------------------//
+void Humanoid::move(float dt) {
+	if (currentVelocity > 0) {
+		
+		if (Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_LEFT) {
+			model.translate(0, 0, -dt * currentVelocity * 0.6);
+			model.translate(-dt * currentVelocity * 0.6, 0, 0);
+		}
+		else if (Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_LEFT) {
+			model.translate(0, 0, dt * currentVelocity * 0.3);
+			model.translate(-dt * currentVelocity * 0.3, 0, 0);
+		}
+		else if (Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_RIGHT) {
+			model.translate(0, 0, -dt * currentVelocity * 0.6);
+			model.translate(dt * currentVelocity * 0.6, 0, 0);
+		}
+		else if (Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_RIGHT) {
+			model.translate(0, 0, dt * currentVelocity * 0.3);
+			model.translate(dt * currentVelocity * 0.3, 0, 0);
+		}
+		else if(Input::gamepads[0].direction & PAD_UP){
+			model.translate(0, 0, -dt * currentVelocity); 
+		}
+		else if (Input::gamepads[0].direction & PAD_DOWN) {
+			model.translate(0, 0, dt * currentVelocity * 0.5);
+		}
+		else if (Input::gamepads[0].direction & PAD_LEFT) {
+			model.translate(-dt * currentVelocity * 0.75, 0, 0);
+		}
+		else if (Input::gamepads[0].direction & PAD_RIGHT) {
+			model.translate(dt * currentVelocity * 0.75, 0, 0);
+		}
+
+		currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
+
+		//Check collisions
+		//Vector3 targetCenter = model.getTranslation() + Vector3(0, 1, 0);
+		//for (EntityMesh* isle : Scene::world->isles) {
+		//	Vector3 coll;
+		//	Vector3 collnorm;
+		//	float scale = isle->model._11; //Suposing the scale is the same in xyz
+		//	if (!isle->mesh->testSphereCollision(isle->model, targetCenter, 3 / scale, coll, collnorm))
+		//		continue;
+
+		//	if (currentVelocity > 5)
+		//		currentVelocity = clamp(currentVelocity - dt * 100, 5, maxVelocity);
+		//	Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity;
+		//	model.translateGlobal(-push_away.x * 2, 0, -push_away.z * 2);
+	}
+
+}
+
+void Humanoid::increaseVelocity(float dt) {
+
+	currentVelocity = clamp(currentVelocity + dt * 10, 0, maxVelocity);
+}
+
+void Humanoid::rotate(float dt, eRotation rot) {
+	if (rot == eclock)
+		model.rotate(0.5 * dt, Vector3(0, 1, 0));
+	else
+		model.rotate(-0.5 * dt, Vector3(0, 1, 0));
 }
 
 //----------------------------------------Entity----------------------------------------//
