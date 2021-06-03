@@ -52,7 +52,16 @@ class EntityMesh : public Entity
         void update(float dt) {};
 };
 
+class Humanoid : public EntityMesh
+{
+public:
+    float maxVelocity;
+    float currentVelocity;
 
+    void increaseVelocity(float dt);
+    void reduceVelocity(float dt);
+    void move(float dt);
+};
 
 class Ship : public EntityMesh
 {
@@ -90,24 +99,12 @@ public:
     EntityMesh* pirate;
 
     Player();
-    void comeAshore() 
-        // Switches game stage from SeaStage to LandStage
-    {
-        if (ship->currentVelocity < 0.1) //to be adjusted
-        {
-            Vector3 SpawnPosition = getPlayerSpawn();
-            if (SpawnPosition.x != NULL) //if doesn't find anything
-            {
-                pirate->model.translate(SpawnPosition.x, SpawnPosition.y, SpawnPosition.z);
-                //Game::instance->current_stage = 1; //doesn't exist yet
-            };
-        }
-    };
+    void comeAshore();
 
     Vector3 getPlayerSpawn() 
         // Finds a place where the player can spawn in the isle
     {
-
+        return Vector3(NULL, NULL, NULL);//null?
     };
 };
 

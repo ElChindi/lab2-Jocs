@@ -26,7 +26,6 @@ std::vector<Ship*> Ship::ships;
 Scene::Scene() {
 	//load one texture without using the Texture Manager (Texture::Get would use the manager)
 
-	// Using cubes as name (replace with isles then)
 	testIsle = new EntityMesh();
 	Matrix44 m1;
 	m1.translate(-100, -1, -100);
@@ -95,10 +94,11 @@ void SeaStage::update(double dt) {
 	
 	Scene::world->player->ship->move(dt);
 
-	if (Input::isKeyPressed(SDL_SCANCODE_W)) Scene::world->player->ship->increaseVelocity(dt);
-	if (Input::isKeyPressed(SDL_SCANCODE_S)) Scene::world->player->ship->reduceVelocity(dt);
-	if (Input::isKeyPressed(SDL_SCANCODE_A)) Scene::world->player->ship->rotate(dt, antieclock);
-	if (Input::isKeyPressed(SDL_SCANCODE_D)) Scene::world->player->ship->rotate(dt, eclock);
+	if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::gamepads[0].isButtonPressed(A_BUTTON)) Scene::world->player->ship->increaseVelocity(dt);
+	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::gamepads[0].direction & PAD_DOWN) Scene::world->player->ship->reduceVelocity(dt);
+	if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::gamepads[0].direction & PAD_LEFT) Scene::world->player->ship->rotate(dt, antieclock);
+	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::gamepads[0].direction & PAD_RIGHT) Scene::world->player->ship->rotate(dt, eclock);
+	if (Input::isKeyPressed(SDL_SCANCODE_E) || Input::gamepads[0].isButtonPressed(Y_BUTTON)) Scene::world->player->comeAshore();
 
 	//camera follows ship with lerp
 
@@ -126,6 +126,7 @@ void LandStage::render() {
 
 	Scene::world->sky.render();
 	Scene::world->player->ship->render();//cambiar por renderizar all ships
+	Scene::world->player->pirate->render();
 
 	for (EntityMesh* isle : Scene::world->isles) {
 		isle->render();
@@ -142,12 +143,12 @@ void LandStage::render() {
 
 void LandStage::update(double dt) {
 
-	Scene::world->player->ship->move(dt);
+	//Scene::world->player->pirate->move(dt);
 
-	if (Input::isKeyPressed(SDL_SCANCODE_W)) Scene::world->player->ship->increaseVelocity(dt);
-	if (Input::isKeyPressed(SDL_SCANCODE_S)) Scene::world->player->ship->reduceVelocity(dt);
-	if (Input::isKeyPressed(SDL_SCANCODE_A)) Scene::world->player->ship->rotate(dt, antieclock);
-	if (Input::isKeyPressed(SDL_SCANCODE_D)) Scene::world->player->ship->rotate(dt, eclock);
+	//if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::gamepads[0].direction & PAD_UP) Scene::world->player->pirate->
+	//if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::gamepads[0].direction & PAD_DOWN) Scene::world->player->pirate->
+	//if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::gamepads[0].direction & PAD_LEFT) Scene::world->player->pirate->
+	//if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::gamepads[0].direction & PAD_RIGHT) Scene::world->player->pirate->
 
 	//camera follows ship with lerp
 
@@ -183,6 +184,21 @@ Player::Player() {
 	pirate->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
 	pirate->color = Vector4(1, 1, 1, 1);
 }
+
+void Player::comeAshore()
+// Switches game stage from SeaStage to LandStage
+{
+	if (ship->currentVelocity < 0.1) //to be adjusted
+	{
+		Vector3 SpawnPosition = getPlayerSpawn();
+		SpawnPosition = ship->model.getTranslation(); //DEBUG
+		if (SpawnPosition.x != NULL) //if doesn't find anything
+		{
+			pirate->model.translate(SpawnPosition.x, SpawnPosition.y, SpawnPosition.z);
+			Game::instance->current_stage = 1;
+		};
+	}
+};
 //----------------------------------------Skybox----------------------------------------//
 Skybox::Skybox() {
 	mesh = Mesh::Get("data/cielo.ASE");
@@ -210,9 +226,9 @@ void Ship::reduceVelocity(float dt) {
 
 void Ship::rotate(float dt, eRotation rot) {
 	if (rot == eclock)
-		model.rotate(1 * dt, Vector3(0, 1, 0));
+		model.rotate(0.5 * dt, Vector3(0, 1, 0));
 	else
-		model.rotate(-1 * dt, Vector3(0, 1, 0));
+		model.rotate(-0.5 * dt, Vector3(0, 1, 0));
 }
 
 void Ship::move(float dt) {
