@@ -159,10 +159,12 @@ void LandStage::update(double dt) {
 	{ 
 		Scene::world->player->pirate->rotate(dt * 4 * abs(rightAnalog), eclock); 
 	}
+	else if (Input::isKeyPressed(SDL_SCANCODE_RIGHT)) { Scene::world->player->pirate->rotate(dt * 3, eclock); }
 	if (rightAnalog < -0.2) 
 	{
 		Scene::world->player->pirate->rotate(dt * 4 * abs(rightAnalog), antieclock); 
 	}
+	else if (Input::isKeyPressed(SDL_SCANCODE_LEFT)) { Scene::world->player->pirate->rotate(dt * 3, antieclock); }
 
 	//camera follows pirate with lerp
 
@@ -182,6 +184,7 @@ Player::Player() {
 
 	Matrix44 m;
 	m.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
+	m.scale(2, 2, 2);
 	ship->model = m;
 	ship->texture = new Texture();
 	ship->texture->load("data/ship_light_cannon.tga");
@@ -239,7 +242,7 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 		if (!isle->mesh->testSphereCollision(isle->model, shipPos, 6 / isleScale, coll, collnorm)) //too far from isle?
 			continue;
 		float pirateScale = Scene::world->player->pirate->model._11;
-		collnorm = normalize(Vector3(coll.x - shipPos.x, 0.001, coll.z - shipPos.z));
+		collnorm = normalize(Vector3(coll.x - shipPos.x, 0.01, coll.z - shipPos.z));
 		Vector3 trialSpawn = Vector3(coll.x+collnorm.x*3, floorHeight*pirateScale, coll.z+collnorm.z*3);
 		if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 5, 0), 4 / isleScale, coll, collnorm)) //player would collide?
 			break;
