@@ -8,6 +8,7 @@
 #include "input.h"
 #include "animation.h"
 #include "camera.h"
+#include "libs/bass.h"
 
 #include <cmath>
 
