@@ -8,50 +8,47 @@ C:\Users\marco\Documents\GitHub\lab2-Jocs\src\main.cpp(118,46): warning C4244: '
 C:\Users\marco\Documents\GitHub\lab2-Jocs\src\main.cpp(152,24): warning C4244: '=': conversión de 'double' a 'float'; posible pérdida de datos
   mygame.cpp
 C:\Users\marco\Documents\GitHub\lab2-Jocs\src\framework.h(372,105): warning C4244: 'return': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(43,34): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(45,19): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(87,35): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(89,136): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(90,129): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(91,121): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(92,122): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(99,92): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(99,94): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(100,97): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(100,99): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(136,37): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(138,131): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(139,133): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(140,133): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(141,134): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(148,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(150,94): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(153,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(155,93): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(161,92): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(161,94): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(162,99): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(162,101): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(174,18): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(185,19): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(233,76): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(234,65): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(285,20): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(287,21): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(306,97): warning C4305: 'argumento': truncamiento de 'double' a 'float'
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(327,48): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(328,42): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(331,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(332,42): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(335,48): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(336,41): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(339,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(340,41): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(346,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(349,42): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(352,41): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(381,20): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(383,21): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(36,34): warning C4305: 'argumento': truncamiento de 'double' a 'float'
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(79,35): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(81,136): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(82,129): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(83,121): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(84,122): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(91,92): warning C4305: 'argumento': truncamiento de 'double' a 'float'
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(91,94): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(92,97): warning C4305: 'argumento': truncamiento de 'double' a 'float'
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(92,99): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(128,37): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(130,131): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(131,133): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(132,133): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(133,134): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(140,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(142,94): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(145,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(147,93): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(153,92): warning C4305: 'argumento': truncamiento de 'double' a 'float'
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(153,94): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(154,99): warning C4305: 'argumento': truncamiento de 'double' a 'float'
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(154,101): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(212,76): warning C4305: 'argumento': truncamiento de 'double' a 'float'
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(213,65): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(256,20): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(258,21): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(277,97): warning C4305: 'argumento': truncamiento de 'double' a 'float'
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(298,48): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(299,42): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(302,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(303,42): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(306,48): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(307,41): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(310,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(311,41): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(317,47): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(320,42): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(323,41): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(352,20): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\marco\Documents\GitHub\lab2-Jocs\src\mygame.cpp(354,21): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
   utils.cpp
 C:\Users\marco\Documents\GitHub\lab2-Jocs\src\framework.h(372,105): warning C4244: 'return': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\marco\Documents\GitHub\lab2-Jocs\src\utils.cpp(83,1): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.

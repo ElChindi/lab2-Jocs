@@ -13,13 +13,6 @@
 #define FLOOR_HEIGHT 0.32
 #define MAX_DISTANCE 2000
 
-//Globals
-
-Mesh* mesh1 = NULL;
-Texture* texture1 = NULL;
-Shader* shader1 = NULL;
-float angle1 = 0;
-
 Scene* Scene::world = NULL;
 std::vector<Ship*> Ship::ships;
 std::vector<Isle*> Isle::isles;
@@ -41,9 +34,6 @@ Scene::Scene() {
 	sea.mesh->createPlane(5000);
 	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
 	sea.color = Vector4(1, 1, 1, 0.8);
-	Matrix44 m3;
-	m3.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	sea.model = m3;
 	sea.texture = new Texture();
 	sea.texture->load("data/sea.tga");
 
@@ -165,33 +155,20 @@ void LandStage::update(double dt) {
 }
 //----------------------------------------Player----------------------------------------//
 Player::Player() {
+	onShip = true;
+
 	ship = new Ship();
 	ship->maxVelocity = 30;
 	ship->currentVelocity = 0;
-	onShip = true;
+	ship->scale(2);
+	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
 
-	Matrix44 m;
-	m.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	m.scale(2, 2, 2);
-	ship->model = m;
-	ship->texture = new Texture();
-	ship->texture->load("data/ship_light_cannon.tga");
-	ship->mesh = Mesh::Get("data/ship_light_cannon.obj");
-	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	ship->color = Vector4(1, 1, 1, 1);
 
 	pirate = new Humanoid();
-	Matrix44 m1;
-	m1.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	m1.scale(3,3,3);
-	pirate->model = m1;
-	pirate->texture = new Texture();
-	pirate->texture->load("data/pirate.tga");
-	pirate->mesh = Mesh::Get("data/pirate.obj");
-	pirate->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	pirate->color = Vector4(1, 1, 1, 1);
 	pirate->maxVelocity = 4;
 	pirate->currentVelocity = 0;
+	pirate->scale(3);
+	pirate->loadMeshAndTexture("data/pirate.obj", "data/pirate.tga");
 }
 
 void Player::comeAshore()
@@ -241,8 +218,7 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 }
 //----------------------------------------Skybox----------------------------------------//
 Skybox::Skybox() {
-	mesh = Mesh::Get("data/cielo.ASE");
-	texture = Texture::Get("data/cielo.tga");
+	loadMeshAndTexture("data/cielo.ASE", "data/cielo.tga");
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	color = Vector4(1, 1, 1, 1);
 }
@@ -256,16 +232,9 @@ void Skybox::render() {
 //----------------------------------------Isle----------------------------------------//
 void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ) {
 	Isle* testIsle = new Isle();
-	Matrix44 m1;
-	m1.translate(-100, -1, -100);
-	m1.scale(30, 30, 30);
-	testIsle->model = m1;
-	testIsle->texture = new Texture();
-	testIsle->texture->load("data/islas/2.tga");
-	testIsle->mesh = Mesh::Get("data/islas/2.obj");
-	testIsle->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	testIsle->color = Vector4(1, 1, 1, 1);
-	//Isle::isles.push_back(testIsle);
+	testIsle->model.translate(-100, -1, -100);
+	testIsle->scale(30);
+	testIsle->loadMeshAndTexture("data/islas/2.obj", "data/islas/2.tga");
 }
 
 

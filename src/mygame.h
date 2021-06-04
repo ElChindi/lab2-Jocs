@@ -23,7 +23,9 @@ enum eRotation { eclock, antieclock };
 class Entity
 {
     public:
-        Entity() {} //constructor
+        Entity() {
+            model = Matrix44();
+        } //constructor
         virtual ~Entity() {} //destructor
  
     //some attributes 
@@ -38,6 +40,10 @@ class Entity
     Vector3 getPosition() {
         return model.getTranslation();
     };
+    void scale(float factor) {
+        model.scale(factor, factor, factor);
+    };
+    
 };
 
 class EntityMesh : public Entity
@@ -52,6 +58,11 @@ class EntityMesh : public Entity
         //methods overwritten 
         void render();
         void update(float dt) {};
+
+        void loadMeshAndTexture(const char* meshPath, const char* texturePath) {
+            mesh = Mesh::Get(meshPath);
+            texture = Texture::Get(texturePath);
+        };
 };
 
 class Humanoid : public EntityMesh
@@ -60,6 +71,10 @@ public:
     float maxVelocity;
     float currentVelocity;
 
+    Humanoid() {
+        shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
+        color = Vector4(1, 1, 1, 1);
+    }
     void move(float dt);
     void increaseVelocity(float dt);
     void rotate(float dt, eRotation rot);
@@ -75,6 +90,8 @@ public:
     float currentVelocity;
 
     Ship() {
+        shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
+        color = Vector4(1, 1, 1, 1);
         ships.push_back(this);
     }
 
@@ -98,9 +115,12 @@ public:
     static std::vector<Isle*> isles;
 
     char type;
-    std::vector<EntityMesh*> thingsInsideIsle;
+    std::vector<EntityMesh*> noCollisionableThings;
+    std::vector<EntityMesh*> collisionableThings;
 
     Isle() {
+        shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
+        color = Vector4(1, 1, 1, 1);
         isles.push_back(this);
     }
 
