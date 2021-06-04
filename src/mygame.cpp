@@ -100,7 +100,7 @@ void SeaStage::update(double dt) {
 	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::gamepads[0].direction & PAD_DOWN) Scene::world->player->ship->reduceVelocity(dt);
 	if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::gamepads[0].direction & PAD_LEFT) Scene::world->player->ship->rotate(dt, antieclock);
 	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::gamepads[0].direction & PAD_RIGHT) Scene::world->player->ship->rotate(dt, eclock);
-	if (Input::isKeyPressed(SDL_SCANCODE_E) || Input::gamepads[0].isButtonPressed(Y_BUTTON)) Scene::world->player->comeAshore();
+	if (Input::wasKeyPressed(SDL_SCANCODE_E) || Input::gamepads[0].wasButtonPressed(Y_BUTTON)) Scene::world->player->comeAshore();
 
 	//camera follows ship with lerp
 
@@ -151,6 +151,7 @@ void LandStage::update(double dt) {
 	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::gamepads[0].direction & PAD_DOWN) Scene::world->player->pirate->increaseVelocity(dt);
 	if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::gamepads[0].direction & PAD_LEFT) Scene::world->player->pirate->increaseVelocity(dt);
 	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::gamepads[0].direction & PAD_RIGHT) Scene::world->player->pirate->increaseVelocity(dt);
+	if (Input::wasKeyPressed(SDL_SCANCODE_E) || Input::gamepads[0].wasButtonPressed(Y_BUTTON)) Scene::world->player->comeAboard();
 
 	float rightAnalog = Input::gamepads[0].axis[Gamepad::RIGHT_ANALOG_X];
 
@@ -191,7 +192,7 @@ Player::Player() {
 	pirate = new Humanoid();
 	Matrix44 m1;
 	m1.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	m1.scale(3, 3, 3);
+	m1.scale(3,3,3);
 	pirate->model = m1;
 	pirate->texture = new Texture();
 	pirate->texture->load("data/pirate.tga");
@@ -211,9 +212,20 @@ void Player::comeAshore()
 		//spawnPosition = ship->model.getTranslation(); //DEBUG
 		if (getPlayerSpawn(spawnPosition)) //if doesn't find anything
 		{
-			pirate->model.translate(spawnPosition.x, spawnPosition.y, spawnPosition.z);
+			float scale = pirate->model._11;
+			pirate->model.setTranslation(spawnPosition.x, spawnPosition.y, spawnPosition.z);
+			pirate->model.scale(scale, scale, scale);
 			Game::instance->current_stage = 1;
 		};
+	}
+};
+
+void Player::comeAboard()
+// Switches game stage from LandStage to SeaStage
+{
+	if ((pirate->getPosition() - ship->getPosition()).length() < 10) //to be adjusted
+	{
+		Game::instance->current_stage = 0;
 	}
 };
 
@@ -223,11 +235,13 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 	for (EntityMesh* isle : Scene::world->isles) {
 		Vector3 coll;
 		Vector3 collnorm;
-		float scale = isle->model._11; //Suposing the scale is the same in xyz
-		if (!isle->mesh->testSphereCollision(isle->model, shipPos, 6 / scale, coll, collnorm)) //too far from isle?
+		float isleScale = isle->model._11; //Suposing the scale is the same in xyz
+		if (!isle->mesh->testSphereCollision(isle->model, shipPos, 6 / isleScale, coll, collnorm)) //too far from isle?
 			continue;
-		Vector3 trialSpawn = Vector3(coll.x, floorHeight, coll.z);
-		if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 5, 0), 4 / scale, coll, collnorm)) //player would collide?
+		float pirateScale = Scene::world->player->pirate->model._11;
+		collnorm = normalize(Vector3(coll.x - shipPos.x, 0.001, coll.z - shipPos.z));
+		Vector3 trialSpawn = Vector3(coll.x+collnorm.x*3, floorHeight*pirateScale, coll.z+collnorm.z*3);
+		if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 5, 0), 4 / isleScale, coll, collnorm)) //player would collide?
 			break;
 		spawnPos = trialSpawn;
 		return true;

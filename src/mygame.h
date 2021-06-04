@@ -35,7 +35,9 @@ class Entity
     virtual void update(float elapsed_time) = 0;
 
     //some useful methods...
-    Vector3 getPosition(); 
+    Vector3 getPosition() {
+        return model.getTranslation();
+    };
 };
 
 class EntityMesh : public Entity
@@ -100,7 +102,7 @@ public:
 
     Player();
     void comeAshore();
-
+    void comeAboard();
     bool getPlayerSpawn(Vector3& spawnPos); // Finds a place where the player can spawn in the isle
 };
 
