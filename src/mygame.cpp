@@ -170,8 +170,8 @@ void LandStage::update(double dt) {
 
 	Vector3 oldEye = Game::instance->camera->eye;
 	Vector3 oldCenter = Game::instance->camera->eye;
-	Vector3 newEye = (Scene::world->player->pirate->model * Vector3(0, 3, 3) - oldEye) * 0.03 * dt * 100 + oldEye;
-	Vector3 newCenter = (Scene::world->player->pirate->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 1000 + oldCenter;
+	Vector3 newEye = (Scene::world->player->pirate->model * Vector3(0, 3, 3) - oldEye) * 0.03 * dt * 200 + oldEye;
+	Vector3 newCenter = (Scene::world->player->pirate->model * Vector3(0, 0, -10) - oldCenter) * 0.1 * dt * 100 + oldCenter;
 	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 
 }
