@@ -93,6 +93,35 @@ public:
     static void updateAll(float dt);
 };
 
+class Isle : public EntityMesh {
+public:
+    static std::vector<Isle*> isles;
+
+    char type;
+    std::vector<EntityMesh*> thingsInsideIsle;
+
+    Isle() {
+        isles.push_back(this);
+    }
+
+
+    ~Isle() {
+        auto it = std::find(isles.begin(), isles.end(), this);
+        isles.erase(it);
+    }
+    void createStuff();
+    static void createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ);
+    static void createRandomIsles(int number, int maxDist) {
+        createRandomIsles(number, -maxDist, maxDist, -maxDist, maxDist);
+    };
+    static void renderAll() {
+        for (Isle* isle : isles) {
+            isle->render();
+        }
+    };
+    static void updateAll(float dt);
+};
+
 class Player
 {
 public:
@@ -150,10 +179,7 @@ public:
     static Scene* world;
     Scene();
 
-    EntityMesh* testIsle;
-    std::vector<EntityMesh*> isles;
-
-    EntityMesh ship;
+    Isle* testIsle;
     Player* player;
     Sea sea;
     Skybox sky;

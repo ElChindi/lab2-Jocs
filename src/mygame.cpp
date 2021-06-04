@@ -10,6 +10,8 @@
 #include "camera.h"
 
 #include <cmath>
+#define FLOOR_HEIGHT 0.32
+#define MAX_DISTANCE 2000
 
 //Globals
 
@@ -20,26 +22,16 @@ float angle1 = 0;
 
 Scene* Scene::world = NULL;
 std::vector<Ship*> Ship::ships;
-
-float floorHeight = 0.32;
+std::vector<Isle*> Isle::isles;
 
 
 //----------------------------------------Scene----------------------------------------//
 Scene::Scene() {
 	//load one texture without using the Texture Manager (Texture::Get would use the manager)
 
-	testIsle = new EntityMesh();
-	Matrix44 m1;
-	m1.translate(-100, -1, -100);
-	m1.scale(30, 30, 30);
-	testIsle->model = m1;
-	testIsle->texture = new Texture();
-	testIsle->texture->load("data/islas/2.tga");
-	testIsle->mesh = Mesh::Get("data/islas/2.obj");
-	testIsle->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	testIsle->color = Vector4(1, 1, 1, 1);
-	isles.push_back(testIsle);
-
+	//create isles
+	Isle::createRandomIsles(5, 1000);
+	
 	//Initialize Player
 	player = new Player();
 	
@@ -79,9 +71,7 @@ void SeaStage::render() {
 	
 	Scene::world->player->ship->render();//cambiar por renderizar all ships
 
-	for (EntityMesh* isle : Scene::world->isles) {
-		isle->render();
-	}//cambiar por funcion propia dentro de isles
+	Isle::renderAll();
 
 	//Draw the floor grid
 	drawGrid();
@@ -130,9 +120,7 @@ void LandStage::render() {
 	Scene::world->player->ship->render();//cambiar por renderizar all ships
 	Scene::world->player->pirate->render();
 
-	for (EntityMesh* isle : Scene::world->isles) {
-		isle->render();
-	}//cambiar por funcion propia dentro de isles
+	Isle::renderAll();
 
 	//Draw the floor grid
 	drawGrid();
@@ -235,7 +223,7 @@ void Player::comeAboard()
 
 bool Player::getPlayerSpawn(Vector3& spawnPos) {
 	Vector3 shipPos = ship->model.getTranslation() + Vector3(0,1,0);
-	for (EntityMesh* isle : Scene::world->isles) {
+	for (EntityMesh* isle : Isle::isles) {
 		Vector3 coll;
 		Vector3 collnorm;
 		float isleScale = isle->model._11; //Suposing the scale is the same in xyz
@@ -243,7 +231,7 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 			continue;
 		float pirateScale = Scene::world->player->pirate->model._11;
 		collnorm = normalize(Vector3(coll.x - shipPos.x, 0.01, coll.z - shipPos.z));
-		Vector3 trialSpawn = Vector3(coll.x+collnorm.x*3, floorHeight*pirateScale, coll.z+collnorm.z*3);
+		Vector3 trialSpawn = Vector3(coll.x+collnorm.x*3, FLOOR_HEIGHT*pirateScale, coll.z+collnorm.z*3);
 		if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 5, 0), 4 / isleScale, coll, collnorm)) //player would collide?
 			break;
 		spawnPos = trialSpawn;
@@ -265,6 +253,22 @@ void Skybox::render() {
 	model.translate(Camera::current->eye.x / 100, Camera::current->eye.y / 100, Camera::current->eye.z / 100);
 	EntityMesh::render();
 }
+//----------------------------------------Isle----------------------------------------//
+void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ) {
+	Isle* testIsle = new Isle();
+	Matrix44 m1;
+	m1.translate(-100, -1, -100);
+	m1.scale(30, 30, 30);
+	testIsle->model = m1;
+	testIsle->texture = new Texture();
+	testIsle->texture->load("data/islas/2.tga");
+	testIsle->mesh = Mesh::Get("data/islas/2.obj");
+	testIsle->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
+	testIsle->color = Vector4(1, 1, 1, 1);
+	//Isle::isles.push_back(testIsle);
+}
+
+
 //----------------------------------------Ship----------------------------------------//
 void Ship::increaseVelocity(float dt) {
 	currentVelocity = clamp(currentVelocity + dt * 10, 0, maxVelocity);
@@ -290,7 +294,7 @@ void Ship::move(float dt) {
 
 		//Check collisions
 		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1, 0);
-		for (EntityMesh* isle : Scene::world->isles) {
+		for (EntityMesh* isle : Isle::isles) {
 			Vector3 coll;
 			Vector3 collnorm;
 			float scale = isle->model._11; //Suposing the scale is the same in xyz
@@ -304,14 +308,14 @@ void Ship::move(float dt) {
 		}
 		//World border
 		targetCenter = model.getTranslation() + Vector3(0, 1, 0);
-		if (targetCenter.x < -2000)
-			model.translateGlobal(-targetCenter.x - 2000, 0, 0);
-		if (targetCenter.x > 2000)
-			model.translateGlobal(-targetCenter.x + 2000, 0, 0);
-		if (targetCenter.z < -2000)
-			model.translateGlobal(0, 0, -targetCenter.z - 2000);
-		if (targetCenter.z > 2000)
-			model.translateGlobal(0, 0, -targetCenter.z + 2000);
+		if (targetCenter.x < -MAX_DISTANCE)
+			model.translateGlobal(-targetCenter.x - MAX_DISTANCE, 0, 0);
+		if (targetCenter.x > MAX_DISTANCE)
+			model.translateGlobal(-targetCenter.x + MAX_DISTANCE, 0, 0);
+		if (targetCenter.z < -MAX_DISTANCE)
+			model.translateGlobal(0, 0, -targetCenter.z - MAX_DISTANCE);
+		if (targetCenter.z > MAX_DISTANCE)
+			model.translateGlobal(0, 0, -targetCenter.z + MAX_DISTANCE);
 
 	}
 }
