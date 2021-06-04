@@ -11,36 +11,21 @@
 #include "libs/bass.h"
 
 #include <cmath>
-
-//Globals
-
-Mesh* mesh1 = NULL;
-Texture* texture1 = NULL;
-Shader* shader1 = NULL;
-float angle1 = 0;
+#define FLOOR_HEIGHT 0.32
+#define MAX_DISTANCE 2000
 
 Scene* Scene::world = NULL;
 std::vector<Ship*> Ship::ships;
-
-float floorHeight = 0.32;
+std::vector<Isle*> Isle::isles;
 
 
 //----------------------------------------Scene----------------------------------------//
 Scene::Scene() {
 	//load one texture without using the Texture Manager (Texture::Get would use the manager)
 
-	testIsle = new EntityMesh();
-	Matrix44 m1;
-	m1.translate(-100, -1, -100);
-	m1.scale(30, 30, 30);
-	testIsle->model = m1;
-	testIsle->texture = new Texture();
-	testIsle->texture->load("data/islas/2.tga");
-	testIsle->mesh = Mesh::Get("data/islas/2.obj");
-	testIsle->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	testIsle->color = Vector4(1, 1, 1, 1);
-	isles.push_back(testIsle);
-
+	//create isles
+	Isle::createRandomIsles(5, 1000);
+	
 	//Initialize Player
 	player = new Player();
 	
@@ -50,9 +35,6 @@ Scene::Scene() {
 	sea.mesh->createPlane(5000);
 	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
 	sea.color = Vector4(1, 1, 1, 0.8);
-	Matrix44 m3;
-	m3.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	sea.model = m3;
 	sea.texture = new Texture();
 	sea.texture->load("data/sea.tga");
 
@@ -80,9 +62,7 @@ void SeaStage::render() {
 	
 	Scene::world->player->ship->render();//cambiar por renderizar all ships
 
-	for (EntityMesh* isle : Scene::world->isles) {
-		isle->render();
-	}//cambiar por funcion propia dentro de isles
+	Isle::renderAll();
 
 	//Draw the floor grid
 	drawGrid();
@@ -131,9 +111,7 @@ void LandStage::render() {
 	Scene::world->player->ship->render();//cambiar por renderizar all ships
 	Scene::world->player->pirate->render();
 
-	for (EntityMesh* isle : Scene::world->isles) {
-		isle->render();
-	}//cambiar por funcion propia dentro de isles
+	Isle::renderAll();
 
 	//Draw the floor grid
 	drawGrid();
@@ -171,40 +149,27 @@ void LandStage::update(double dt) {
 
 	Vector3 oldEye = Game::instance->camera->eye;
 	Vector3 oldCenter = Game::instance->camera->eye;
-	Vector3 newEye = (Scene::world->player->pirate->model * Vector3(0, 3, 3) - oldEye) * 0.03 * dt * 100 + oldEye;
-	Vector3 newCenter = (Scene::world->player->pirate->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 1000 + oldCenter;
+	Vector3 newEye = (Scene::world->player->pirate->model * Vector3(0, 3, 3) - oldEye) * 0.03 * dt * 200 + oldEye;
+	Vector3 newCenter = (Scene::world->player->pirate->model * Vector3(0, 0, -10) - oldCenter) * 0.1 * dt * 100 + oldCenter;
 	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 
 }
 //----------------------------------------Player----------------------------------------//
 Player::Player() {
+	onShip = true;
+
 	ship = new Ship();
 	ship->maxVelocity = 30;
 	ship->currentVelocity = 0;
-	onShip = true;
+	ship->scale(2);
+	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
 
-	Matrix44 m;
-	m.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	m.scale(2, 2, 2);
-	ship->model = m;
-	ship->texture = new Texture();
-	ship->texture->load("data/ship_light_cannon.tga");
-	ship->mesh = Mesh::Get("data/ship_light_cannon.obj");
-	ship->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	ship->color = Vector4(1, 1, 1, 1);
 
 	pirate = new Humanoid();
-	Matrix44 m1;
-	m1.rotate(angle1 * DEG2RAD, Vector3(0, 1, 0));
-	m1.scale(3,3,3);
-	pirate->model = m1;
-	pirate->texture = new Texture();
-	pirate->texture->load("data/pirate.tga");
-	pirate->mesh = Mesh::Get("data/pirate.obj");
-	pirate->shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-	pirate->color = Vector4(1, 1, 1, 1);
 	pirate->maxVelocity = 4;
 	pirate->currentVelocity = 0;
+	pirate->scale(3);
+	pirate->loadMeshAndTexture("data/pirate.obj", "data/pirate.tga");
 }
 
 void Player::comeAshore()
@@ -236,7 +201,7 @@ void Player::comeAboard()
 
 bool Player::getPlayerSpawn(Vector3& spawnPos) {
 	Vector3 shipPos = ship->model.getTranslation() + Vector3(0,1,0);
-	for (EntityMesh* isle : Scene::world->isles) {
+	for (EntityMesh* isle : Isle::isles) {
 		Vector3 coll;
 		Vector3 collnorm;
 		float isleScale = isle->model._11; //Suposing the scale is the same in xyz
@@ -244,7 +209,7 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 			continue;
 		float pirateScale = Scene::world->player->pirate->model._11;
 		collnorm = normalize(Vector3(coll.x - shipPos.x, 0.01, coll.z - shipPos.z));
-		Vector3 trialSpawn = Vector3(coll.x+collnorm.x*3, floorHeight*pirateScale, coll.z+collnorm.z*3);
+		Vector3 trialSpawn = Vector3(coll.x+collnorm.x*3, FLOOR_HEIGHT*pirateScale, coll.z+collnorm.z*3);
 		if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 5, 0), 4 / isleScale, coll, collnorm)) //player would collide?
 			break;
 		spawnPos = trialSpawn;
@@ -254,8 +219,7 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 }
 //----------------------------------------Skybox----------------------------------------//
 Skybox::Skybox() {
-	mesh = Mesh::Get("data/cielo.ASE");
-	texture = Texture::Get("data/cielo.tga");
+	loadMeshAndTexture("data/cielo.ASE", "data/cielo.tga");
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	color = Vector4(1, 1, 1, 1);
 }
@@ -266,6 +230,15 @@ void Skybox::render() {
 	model.translate(Camera::current->eye.x / 100, Camera::current->eye.y / 100, Camera::current->eye.z / 100);
 	EntityMesh::render();
 }
+//----------------------------------------Isle----------------------------------------//
+void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ) {
+	Isle* testIsle = new Isle();
+	testIsle->model.translate(-100, -1, -100);
+	testIsle->scale(30);
+	testIsle->loadMeshAndTexture("data/islas/2.obj", "data/islas/2.tga");
+}
+
+
 //----------------------------------------Ship----------------------------------------//
 void Ship::increaseVelocity(float dt) {
 	currentVelocity = clamp(currentVelocity + dt * 10, 0, maxVelocity);
@@ -291,7 +264,7 @@ void Ship::move(float dt) {
 
 		//Check collisions
 		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1, 0);
-		for (EntityMesh* isle : Scene::world->isles) {
+		for (EntityMesh* isle : Isle::isles) {
 			Vector3 coll;
 			Vector3 collnorm;
 			float scale = isle->model._11; //Suposing the scale is the same in xyz
@@ -305,14 +278,14 @@ void Ship::move(float dt) {
 		}
 		//World border
 		targetCenter = model.getTranslation() + Vector3(0, 1, 0);
-		if (targetCenter.x < -2000)
-			model.translateGlobal(-targetCenter.x - 2000, 0, 0);
-		if (targetCenter.x > 2000)
-			model.translateGlobal(-targetCenter.x + 2000, 0, 0);
-		if (targetCenter.z < -2000)
-			model.translateGlobal(0, 0, -targetCenter.z - 2000);
-		if (targetCenter.z > 2000)
-			model.translateGlobal(0, 0, -targetCenter.z + 2000);
+		if (targetCenter.x < -MAX_DISTANCE)
+			model.translateGlobal(-targetCenter.x - MAX_DISTANCE, 0, 0);
+		if (targetCenter.x > MAX_DISTANCE)
+			model.translateGlobal(-targetCenter.x + MAX_DISTANCE, 0, 0);
+		if (targetCenter.z < -MAX_DISTANCE)
+			model.translateGlobal(0, 0, -targetCenter.z - MAX_DISTANCE);
+		if (targetCenter.z > MAX_DISTANCE)
+			model.translateGlobal(0, 0, -targetCenter.z + MAX_DISTANCE);
 
 	}
 }
