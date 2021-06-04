@@ -316,32 +316,32 @@ void Ship::move(float dt) {
 void Humanoid::move(float dt) {
 	if (currentVelocity > 0) {
 		
-		if (Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_LEFT) {
+		if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_A))) {
 			model.translate(0, 0, -dt * currentVelocity * 0.6);
 			model.translate(-dt * currentVelocity * 0.6, 0, 0);
 		}
-		else if (Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_LEFT) {
+		else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_A))) {
 			model.translate(0, 0, dt * currentVelocity * 0.3);
 			model.translate(-dt * currentVelocity * 0.3, 0, 0);
 		}
-		else if (Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_RIGHT) {
+		else if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_D))) {
 			model.translate(0, 0, -dt * currentVelocity * 0.6);
 			model.translate(dt * currentVelocity * 0.6, 0, 0);
 		}
-		else if (Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_RIGHT) {
+		else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_R))) {
 			model.translate(0, 0, dt * currentVelocity * 0.3);
 			model.translate(dt * currentVelocity * 0.3, 0, 0);
 		}
-		else if(Input::gamepads[0].direction & PAD_UP){
+		else if(Input::gamepads[0].direction & PAD_UP || (Input::isKeyPressed(SDL_SCANCODE_W))){
 			model.translate(0, 0, -dt * currentVelocity); 
 		}
-		else if (Input::gamepads[0].direction & PAD_DOWN) {
+		else if (Input::gamepads[0].direction & PAD_DOWN || (Input::isKeyPressed(SDL_SCANCODE_S))) {
 			model.translate(0, 0, dt * currentVelocity * 0.5);
 		}
-		else if (Input::gamepads[0].direction & PAD_LEFT) {
+		else if (Input::gamepads[0].direction & PAD_LEFT || (Input::isKeyPressed(SDL_SCANCODE_A))) {
 			model.translate(-dt * currentVelocity * 0.75, 0, 0);
 		}
-		else if (Input::gamepads[0].direction & PAD_RIGHT) {
+		else if (Input::gamepads[0].direction & PAD_RIGHT || (Input::isKeyPressed(SDL_SCANCODE_D))) {
 			model.translate(dt * currentVelocity * 0.75, 0, 0);
 		}
 
