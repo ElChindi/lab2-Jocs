@@ -11,8 +11,6 @@
 #include "libs/bass.h"
 
 #include <cmath>
-#define FLOOR_HEIGHT 0.32
-#define MAX_DISTANCE 2000
 
 Scene* Scene::world = NULL;
 std::vector<Ship*> Ship::ships;
@@ -24,7 +22,7 @@ Scene::Scene() {
 	//load one texture without using the Texture Manager (Texture::Get would use the manager)
 
 	//create isles
-	Isle::createRandomIsles(5, 1000);
+	Isle::createRandomIsles(20, MAX_DISTANCE);
 	
 	//Initialize Player
 	player = new Player();
@@ -181,9 +179,9 @@ void Player::comeAshore()
 		//spawnPosition = ship->model.getTranslation(); //DEBUG
 		if (getPlayerSpawn(spawnPosition)) //if doesn't find anything
 		{
-			float scale = pirate->model._11;
+			//float scale = pirate->model._11;
 			pirate->model.setTranslation(spawnPosition.x, spawnPosition.y, spawnPosition.z);
-			pirate->model.scale(scale, scale, scale);
+			pirate->scale(3);
 			Game::instance->current_stage = 1;
 		};
 	}
@@ -192,7 +190,7 @@ void Player::comeAshore()
 void Player::comeAboard()
 // Switches game stage from LandStage to SeaStage
 {
-	if ((pirate->getPosition() - ship->getPosition()).length() < 10) //to be adjusted
+	if ((pirate->getPosition() - ship->getPosition()).length() < 20) //to be adjusted
 	{
 		Game::instance->current_stage = 0;
 	}
@@ -204,14 +202,14 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 	for (EntityMesh* isle : Isle::isles) {
 		Vector3 coll;
 		Vector3 collnorm;
-		float isleScale = isle->model._11; //Suposing the scale is the same in xyz
-		if (!isle->mesh->testSphereCollision(isle->model, shipPos, 6 / isleScale, coll, collnorm)) //too far from isle?
+		//float isleScale = isle->model._11; //Suposing the scale is the same in xyz
+		if (!isle->mesh->testSphereCollision(isle->model, shipPos, 0.4 /*/ isleScale*/, coll, collnorm)) //too far from isle?
 			continue;
-		float pirateScale = Scene::world->player->pirate->model._11;
+		//float pirateScale = Scene::world->player->pirate->model._11;
 		collnorm = normalize(Vector3(coll.x - shipPos.x, 0.01, coll.z - shipPos.z));
-		Vector3 trialSpawn = Vector3(coll.x+collnorm.x*3, FLOOR_HEIGHT*pirateScale, coll.z+collnorm.z*3);
-		if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 5, 0), 4 / isleScale, coll, collnorm)) //player would collide?
-			break;
+		Vector3 trialSpawn = Vector3(coll.x+collnorm.x*3, FLOOR_HEIGHT*3/**pirateScale*/, coll.z+collnorm.z*3);
+		//if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 5, 0), 0.4 /*/ isleScale*/, coll, collnorm)) //player would collide?
+		//	break;
 		spawnPos = trialSpawn;
 		return true;
 	}
@@ -232,12 +230,48 @@ void Skybox::render() {
 }
 //----------------------------------------Isle----------------------------------------//
 void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ) {
-	Isle* testIsle = new Isle();
+	int islesLeft = number;
+	while (islesLeft > 0) {
+		Vector3 pos = getNewIslePosition(minX, maxX, minZ, maxZ);
+		Isle* isle = new Isle();
+		isle->model.setIdentity();
+		isle->scale(30);
+		isle->model.rotate(random(6.28), Vector3(0, 1, 0));
+		isle->model.translateGlobal(pos.x, pos.y, pos.z);
+		char type = rand() % ISLE_TYPES + 1;
+		isle->type = type;
+		isle->loadMeshAndTexture(("data/islas/"+std::to_string(type)+".obj").c_str(), ("data/islas/" + std::to_string(type) + ".tga").c_str());
+		islesLeft -= 1;
+	}
+	/*Isle* testIsle = new Isle();
 	testIsle->model.translate(-100, -1, -100);
 	testIsle->scale(30);
-	testIsle->loadMeshAndTexture("data/islas/2.obj", "data/islas/2.tga");
+	testIsle->loadMeshAndTexture("data/islas/2.obj", "data/islas/2.tga");*/
 }
 
+Vector3 Isle::getNewIslePosition(int minX, int maxX, int minZ, int maxZ) {
+	bool validPos = false;
+	Vector3 position;
+	while (!validPos) {
+		//generate random pos within max distances + a padding
+		position = Vector3(random(maxX - minX - DIST_BTW_ISLES, minX + DIST_BTW_ISLES / 2), ISLE_Y_OFFSET,
+							random(maxZ - minZ - DIST_BTW_ISLES, minZ + DIST_BTW_ISLES / 2));
+		//supose it is valid
+		validPos = true;
+		//it cant be near the center
+		if (position.length() < DIST_BTW_ISLES) {
+			validPos = false;
+			continue; //try again
+		}
+		for (Isle* isle : isles) {
+			if ((isle->getPosition() - position).length() < DIST_BTW_ISLES) {
+				validPos = false;
+				break; //try again
+			}
+		}
+	}
+	return position;
+}
 
 //----------------------------------------Ship----------------------------------------//
 void Ship::increaseVelocity(float dt) {
@@ -263,12 +297,12 @@ void Ship::move(float dt) {
 		currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
 
 		//Check collisions
-		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1, 0);
+		Vector3 targetCenter = model.getTranslation();
 		for (EntityMesh* isle : Isle::isles) {
 			Vector3 coll;
 			Vector3 collnorm;
-			float scale = isle->model._11; //Suposing the scale is the same in xyz
-			if (!isle->mesh->testSphereCollision(isle->model, targetCenter, 3 / scale, coll, collnorm))
+			//float scale = isle->model._11; //Suposing the scale is the same in xyz
+			if (!isle->mesh->testSphereCollision(isle->model, targetCenter, 0.2, coll, collnorm))
 				continue;
 
 			if (currentVelocity > 5)

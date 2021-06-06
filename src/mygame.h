@@ -10,6 +10,11 @@
 #include "shader.h"
 #include "animation.h"
 
+#define FLOOR_HEIGHT 0.32
+#define MAX_DISTANCE 2000
+#define ISLE_Y_OFFSET -1
+#define DIST_BTW_ISLES 500
+#define ISLE_TYPES 2
 
 //Globals
 
@@ -131,9 +136,9 @@ public:
     }
     void createStuff();
     static void createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ);
-    static void createRandomIsles(int number, int maxDist) {
-        createRandomIsles(number, -maxDist, maxDist, -maxDist, maxDist);
-    };
+    static void createRandomIsles(int number, int maxDist) { createRandomIsles(number, -maxDist, maxDist, -maxDist, maxDist); };
+    static Vector3 getNewIslePosition(int minX, int maxX, int minZ, int maxZ);
+
     static void renderAll() {
         for (Isle* isle : isles) {
             isle->render();
