@@ -82,6 +82,7 @@ public:
     Humanoid() {
         shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
         color = Vector4(1, 1, 1, 1);
+        currentVelocity = 0;
     }
     void move(float dt);
     void increaseVelocity(float dt);
@@ -100,6 +101,7 @@ public:
     Ship() {
         shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
         color = Vector4(1, 1, 1, 1);
+        currentVelocity = 0;
         ships.push_back(this);
     }
 
@@ -125,6 +127,7 @@ public:
     char type;
     std::vector<EntityMesh*> noCollisionableThings;
     std::vector<EntityMesh*> collisionableThings;
+    std::vector<Humanoid*> enemies;
 
     Isle() {
         shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
@@ -138,6 +141,8 @@ public:
         isles.erase(it);
     }
     void createStuff();
+    void createEnemies(int n);
+    bool isAboveIsle(EntityMesh* e);
     static void createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ);
     static void createRandomIsles(int number, int maxDist) { createRandomIsles(number, -maxDist, maxDist, -maxDist, maxDist); };
     static Vector3 getNewIslePosition(int minX, int maxX, int minZ, int maxZ);

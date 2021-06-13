@@ -158,15 +158,14 @@ Player::Player() {
 	onShip = true;
 
 	ship = new Ship();
+	ship->model.translateGlobal(300, 0, 300);
 	ship->maxVelocity = 30;
-	ship->currentVelocity = 0;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
 
 
 	pirate = new Humanoid();
 	pirate->maxVelocity = 4;
-	pirate->currentVelocity = 0;
 	pirate->scale(3);
 	pirate->loadMeshAndTexture("data/pirate.obj", "data/pirate.tga");
 }
@@ -232,6 +231,19 @@ void Skybox::render() {
 	EntityMesh::render();
 }
 //----------------------------------------Isle----------------------------------------//
+void Isle::createEnemies(int n) {
+	int enemiesLeft = n;
+	while (enemiesLeft > 0) {
+		
+	}
+}
+
+bool Isle::isAboveIsle(EntityMesh* e) {
+	Vector3 coll;
+	Vector3 collnorm;
+	return mesh->testRayCollision(model, e->getPosition(), Vector3(0, -1, 0), coll, collnorm,0.1);
+}
+
 void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ) {
 	int islesLeft = number;
 	while (islesLeft > 0) {
@@ -246,10 +258,6 @@ void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ)
 		isle->loadMeshAndTexture(("data/islas/"+std::to_string(type)+".obj").c_str(), ("data/islas/" + std::to_string(type) + ".tga").c_str());
 		islesLeft -= 1;
 	}
-	/*Isle* testIsle = new Isle();
-	testIsle->model.translate(-100, -1, -100);
-	testIsle->scale(30);
-	testIsle->loadMeshAndTexture("data/islas/2.obj", "data/islas/2.tga");*/
 }
 
 Vector3 Isle::getNewIslePosition(int minX, int maxX, int minZ, int maxZ) {
@@ -329,43 +337,61 @@ void Ship::move(float dt) {
 //----------------------------------------Humanoid----------------------------------------//
 void Humanoid::move(float dt) {
 	if (currentVelocity > 0) {
-		
+		Vector3 dir = Vector3();
 		if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_A))) {
-			model.translate(0, 0, -dt * currentVelocity * 0.6);
-			model.translate(-dt * currentVelocity * 0.6, 0, 0);
+			/*model.translate(0, 0, -dt * currentVelocity * 0.6);
+			model.translate(-dt * currentVelocity * 0.6, 0, 0);*/
+			dir = Vector3(-0.6, 0, -0.6);
 		}
 		else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_A))) {
-			model.translate(0, 0, dt * currentVelocity * 0.3);
-			model.translate(-dt * currentVelocity * 0.3, 0, 0);
+			/*model.translate(0, 0, dt * currentVelocity * 0.3);
+			model.translate(-dt * currentVelocity * 0.3, 0, 0);*/
+			dir = Vector3(-0.3, 0, 0.3);
 		}
 		else if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_D))) {
-			model.translate(0, 0, -dt * currentVelocity * 0.6);
-			model.translate(dt * currentVelocity * 0.6, 0, 0);
+			/*model.translate(0, 0, -dt * currentVelocity * 0.6);
+			model.translate(dt * currentVelocity * 0.6, 0, 0);*/
+			dir = Vector3(0.6, 0, -0.6);
 		}
 		else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_D))) {
-			model.translate(0, 0, dt * currentVelocity * 0.3);
-			model.translate(dt * currentVelocity * 0.3, 0, 0);
+			/*model.translate(0, 0, dt * currentVelocity * 0.3);
+			model.translate(dt * currentVelocity * 0.3, 0, 0);*/
+			dir = Vector3(0.3, 0, 0.3);
 		}
 		else if(Input::gamepads[0].direction & PAD_UP || (Input::isKeyPressed(SDL_SCANCODE_W))){
-			model.translate(0, 0, -dt * currentVelocity); 
+			//model.translate(0, 0, -dt * currentVelocity); 
+			dir = Vector3(0, 0, -1);
 		}
 		else if (Input::gamepads[0].direction & PAD_DOWN || (Input::isKeyPressed(SDL_SCANCODE_S))) {
-			model.translate(0, 0, dt * currentVelocity * 0.5);
+			//model.translate(0, 0, dt * currentVelocity * 0.5);
+			dir = Vector3(0, 0, 0.5);
 		}
 		else if (Input::gamepads[0].direction & PAD_LEFT || (Input::isKeyPressed(SDL_SCANCODE_A))) {
-			model.translate(-dt * currentVelocity * 0.75, 0, 0);
+			//model.translate(-dt * currentVelocity * 0.75, 0, 0);
+			dir = Vector3(-0.75, 0, 0);
 		}
 		else if (Input::gamepads[0].direction & PAD_RIGHT || (Input::isKeyPressed(SDL_SCANCODE_D))) {
-			model.translate(dt * currentVelocity * 0.75, 0, 0);
+			//model.translate(dt * currentVelocity * 0.75, 0, 0);
+			dir = Vector3(0.75, 0, 0);
 		}
 
-		currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
+		
+		model.translate(dt * currentVelocity * dir.x, 0, dt * currentVelocity * dir.z);
 
-		//Check collisions
-		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1.5, 0);
+		currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
 		Isle* isle = Scene::world->currentIsle;
+		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1.5, 0);
 		Vector3 coll;
 		Vector3 collnorm;
+
+		//Check if in the isle
+		if (!isle->isAboveIsle(this) && isle->mesh->testSphereCollision(isle->model, targetCenter, 2 / isle->scaleFactor, coll, collnorm)) {
+			Vector3 push_in = normalize(Vector3(coll.x - targetCenter.x, 0.000000001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
+			model.translateGlobal(push_in.x, 0, push_in.z);
+		}
+			//model.translate(-dt * currentVelocity * dir.x, 0, -dt * currentVelocity * dir.z); 
+
+		//Check collisions
 		if (!isle->mesh->testSphereCollision(isle->model, targetCenter, 1.4/isle->scaleFactor, coll, collnorm))
 			return;
 
