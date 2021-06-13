@@ -30,12 +30,14 @@ class Entity
     public:
         Entity() {
             model = Matrix44();
+            scaleFactor = 1;
         } //constructor
         virtual ~Entity() {} //destructor
  
     //some attributes 
     std::string name; 
     Matrix44 model;
+    float scaleFactor;
  
     //methods overwritten by derived classes
     virtual void render() = 0;
@@ -46,6 +48,7 @@ class Entity
         return model.getTranslation();
     };
     void scale(float factor) {
+        scaleFactor = factor;
         model.scale(factor, factor, factor);
     };
     
@@ -204,7 +207,7 @@ public:
     static Scene* world;
     Scene();
 
-    Isle* testIsle;
+    Isle* currentIsle; //store current isle from list of isles
     Player* player;
     Sea sea;
     Skybox sky;

@@ -23,6 +23,7 @@ Scene::Scene() {
 
 	//create isles
 	Isle::createRandomIsles(20, MAX_DISTANCE);
+	currentIsle = NULL; //change if we start in an isle
 	
 	//Initialize Player
 	player = new Player();
@@ -181,7 +182,7 @@ void Player::comeAshore()
 		{
 			//float scale = pirate->model._11;
 			pirate->model.setTranslation(spawnPosition.x, spawnPosition.y, spawnPosition.z);
-			pirate->scale(3);
+			pirate->scale(pirate->scaleFactor);
 			Game::instance->current_stage = 1;
 		};
 	}
@@ -192,6 +193,7 @@ void Player::comeAboard()
 {
 	if ((pirate->getPosition() - ship->getPosition()).length() < 20) //to be adjusted
 	{
+		Scene::world->currentIsle = NULL;
 		Game::instance->current_stage = 0;
 	}
 };
@@ -199,7 +201,7 @@ void Player::comeAboard()
 
 bool Player::getPlayerSpawn(Vector3& spawnPos) {
 	Vector3 shipPos = ship->model.getTranslation() + Vector3(0,1,0);
-	for (EntityMesh* isle : Isle::isles) {
+	for (Isle* isle : Isle::isles) {
 		Vector3 coll;
 		Vector3 collnorm;
 		//float isleScale = isle->model._11; //Suposing the scale is the same in xyz
@@ -208,9 +210,10 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 		//float pirateScale = Scene::world->player->pirate->model._11;
 		collnorm = normalize(Vector3(coll.x - shipPos.x, 0.01, coll.z - shipPos.z));
 		Vector3 trialSpawn = Vector3(coll.x+collnorm.x*3, FLOOR_HEIGHT*3/**pirateScale*/, coll.z+collnorm.z*3);
-		//if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 5, 0), 0.4 /*/ isleScale*/, coll, collnorm)) //player would collide?
-		//	break;
+		if (isle->mesh->testSphereCollision(isle->model, trialSpawn + Vector3(0, 3, 0), 0.1 /*/ isleScale*/, coll, collnorm)) //player would collide?
+			break;
 		spawnPos = trialSpawn;
+		Scene::world->currentIsle = isle;
 		return true;
 	}
 	return false;//null?
@@ -339,7 +342,7 @@ void Humanoid::move(float dt) {
 			model.translate(0, 0, -dt * currentVelocity * 0.6);
 			model.translate(dt * currentVelocity * 0.6, 0, 0);
 		}
-		else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_R))) {
+		else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_D))) {
 			model.translate(0, 0, dt * currentVelocity * 0.3);
 			model.translate(dt * currentVelocity * 0.3, 0, 0);
 		}
@@ -359,18 +362,17 @@ void Humanoid::move(float dt) {
 		currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
 
 		//Check collisions
-		//Vector3 targetCenter = model.getTranslation() + Vector3(0, 1, 0);
-		//for (EntityMesh* isle : Scene::world->isles) {
-		//	Vector3 coll;
-		//	Vector3 collnorm;
-		//	float scale = isle->model._11; //Suposing the scale is the same in xyz
-		//	if (!isle->mesh->testSphereCollision(isle->model, targetCenter, 3 / scale, coll, collnorm))
-		//		continue;
+		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1.5, 0);
+		Isle* isle = Scene::world->currentIsle;
+		Vector3 coll;
+		Vector3 collnorm;
+		if (!isle->mesh->testSphereCollision(isle->model, targetCenter, 1.4/isle->scaleFactor, coll, collnorm))
+			return;
 
-		//	if (currentVelocity > 5)
-		//		currentVelocity = clamp(currentVelocity - dt * 100, 5, maxVelocity);
-		//	Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity;
-		//	model.translateGlobal(-push_away.x * 2, 0, -push_away.z * 2);
+		//if (currentVelocity > 5)
+		//	currentVelocity = clamp(currentVelocity - dt * 100, 5, maxVelocity);
+		Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.000000001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
+		model.translateGlobal(-push_away.x, 0, -push_away.z);
 	}
 
 }
