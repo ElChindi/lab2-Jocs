@@ -111,6 +111,7 @@ void LandStage::render() {
 	Scene::world->player->pirate->render();
 
 	Isle::renderAll();
+	Scene::world->currentIsle->renderEnemies();
 
 	//Draw the floor grid
 	drawGrid();
@@ -158,7 +159,6 @@ Player::Player() {
 	onShip = true;
 
 	ship = new Ship();
-	ship->model.translateGlobal(300, 0, 300);
 	ship->maxVelocity = 30;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
@@ -234,14 +234,42 @@ void Skybox::render() {
 void Isle::createEnemies(int n) {
 	int enemiesLeft = n;
 	while (enemiesLeft > 0) {
-		
+		Vector3 pos = getNewEnemyPosition();
+		Humanoid* enemy = new Humanoid();
+		this->enemies.push_back(enemy);
+		enemy->model.setIdentity();
+		enemy->scale(3);
+		enemy->model.translateGlobal(pos.x, pos.y, pos.z);
+		enemy->loadMeshAndTexture("data/pirate.obj", "data/pirate.tga");
+		enemiesLeft -= 1;
 	}
 }
 
-bool Isle::isAboveIsle(EntityMesh* e) {
+Vector3 Isle::getNewEnemyPosition() {
+	bool validPos = false;
+	Vector3 isleCenter = this->getPosition();
+	Vector3 position;
+	while (!validPos) {
+		position = Vector3(random(DIST_BTW_ISLES, isleCenter.x - DIST_BTW_ISLES / 2), 1,
+			random(DIST_BTW_ISLES, isleCenter.z - DIST_BTW_ISLES / 2));
+		//supose it is valid
+		validPos = true;
+		//in isle and not colliding
+		Vector3 coll;
+		Vector3 collnorm;
+		if (!isAboveIsle(position) || this->mesh->testSphereCollision(this->model, position + Vector3(0, 1.5, 0), 1.4 / this->scaleFactor, coll, collnorm)) {
+			validPos = false;
+			continue;
+		}
+	}
+	return position;
+}
+
+
+bool Isle::isAboveIsle(Vector3 pos) {
 	Vector3 coll;
 	Vector3 collnorm;
-	return mesh->testRayCollision(model, e->getPosition(), Vector3(0, -1, 0), coll, collnorm,0.1);
+	return mesh->testRayCollision(model, pos, Vector3(0, -1, 0), coll, collnorm,0.1);
 }
 
 void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ) {
@@ -256,6 +284,7 @@ void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ)
 		char type = rand() % ISLE_TYPES + 1;
 		isle->type = type;
 		isle->loadMeshAndTexture(("data/islas/"+std::to_string(type)+".obj").c_str(), ("data/islas/" + std::to_string(type) + ".tga").c_str());
+		isle->createEnemies(10);
 		islesLeft -= 1;
 	}
 }
@@ -386,6 +415,7 @@ void Humanoid::move(float dt) {
 
 		//Check if in the isle
 		if (!isle->isAboveIsle(this) && isle->mesh->testSphereCollision(isle->model, targetCenter, 2 / isle->scaleFactor, coll, collnorm)) {
+			//std::cout << "Out" << std::endl;
 			Vector3 push_in = normalize(Vector3(coll.x - targetCenter.x, 0.000000001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
 			model.translateGlobal(push_in.x, 0, push_in.z);
 		}
