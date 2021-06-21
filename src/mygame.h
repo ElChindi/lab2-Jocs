@@ -143,11 +143,20 @@ public:
     }
     void createStuff();
     void createEnemies(int n);
-    bool isAboveIsle(EntityMesh* e);
+    Vector3 getNewEnemyPosition();
+    
+
+    bool isAboveIsle(Vector3 pos);
+    bool isAboveIsle(EntityMesh* e) { return isAboveIsle(e->getPosition()); };
     static void createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ);
     static void createRandomIsles(int number, int maxDist) { createRandomIsles(number, -maxDist, maxDist, -maxDist, maxDist); };
     static Vector3 getNewIslePosition(int minX, int maxX, int minZ, int maxZ);
 
+    void renderEnemies() {
+        for (Humanoid* enemy : enemies) {
+            enemy->render();
+        }
+    };
     static void renderAll() {
         for (Isle* isle : isles) {
             isle->render();
