@@ -9,6 +9,7 @@
 #include "texture.h"
 #include "shader.h"
 #include "animation.h"
+#include "libs/bass.h"
 
 #define FLOOR_HEIGHT 0.32
 #define MAX_DISTANCE 2000
@@ -226,5 +227,27 @@ public:
     }
 
 };
+
+//----------------------------------------AudioManager----------------------------------------//
+class AudioManager {
+public:
+    static AudioManager* audio;
+    AudioManager() {
+        //Inicializamos BASS al arrancar el juego (id_del_device, muestras por segundo, ...)
+        if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
+        {
+            //error abriendo la tarjeta de sonido...
+        }
+
+        //El handler para un sample
+        HSAMPLE hSample;
+
+        //El handler para un canal
+        HCHANNEL hSampleChannel;
+
+
+    };
+};
+
 
 #endif
