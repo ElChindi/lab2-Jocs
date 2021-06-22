@@ -124,7 +124,8 @@ void LandStage::render() {
 
 void LandStage::update(double dt) {
 
-	Scene::world->player->pirate->move(dt);
+	Scene::world->player->pirate->movePlayer(dt);
+	Scene::world->currentIsle->updateEnemies(dt);
 
 	if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::gamepads[0].direction & PAD_UP) Scene::world->player->pirate->increaseVelocity(dt);
 	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::gamepads[0].direction & PAD_DOWN) Scene::world->player->pirate->increaseVelocity(dt);
@@ -159,6 +160,7 @@ Player::Player() {
 	onShip = true;
 
 	ship = new Ship();
+	ship->model.translate(500, 0, -150);
 	ship->maxVelocity = 30;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
@@ -364,7 +366,7 @@ void Ship::move(float dt) {
 	}
 }
 //----------------------------------------Humanoid----------------------------------------//
-void Humanoid::move(float dt) {
+void Humanoid::movePlayer(float dt) {
 	if (currentVelocity > 0) {
 		Vector3 dir = Vector3();
 		if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_A))) {
@@ -431,6 +433,24 @@ void Humanoid::move(float dt) {
 		model.translateGlobal(-push_away.x, 0, -push_away.z);
 	}
 
+}
+
+void Humanoid::moveEnemyTowardsPlayer(float dt) {
+	Vector3 playerPos = Scene::world->player->pirate->getPosition();
+	Vector3 enemyPos = this->getPosition();
+	Vector3 dir = Vector3(enemyPos.x - playerPos.x, 0, enemyPos.z - playerPos.z);
+	this->model.setFrontAndOrthonormalize(dir);
+	this->model.setUpAndOrthonormalize(Vector3(0,1,0));
+	this->scale(this->scaleFactor);
+
+	model.translate(0, 0, -dt * currentVelocity);
+	currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
+}
+
+bool Humanoid::isNearPlayer() {
+	Vector3 playerPos = Scene::world->player->pirate->getPosition();
+	Vector3 enemyPos = this->getPosition();
+	return ((playerPos - enemyPos).length() < 50);
 }
 
 void Humanoid::increaseVelocity(float dt) {

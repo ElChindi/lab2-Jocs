@@ -15,7 +15,7 @@
 #define MAX_DISTANCE 2000
 #define ISLE_Y_OFFSET -1
 #define DIST_BTW_ISLES 500
-#define ISLE_TYPES 2
+#define ISLE_TYPES 6
 
 //Globals
 
@@ -84,8 +84,11 @@ public:
         shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
         color = Vector4(1, 1, 1, 1);
         currentVelocity = 0;
+        maxVelocity = 3;
     }
-    void move(float dt);
+    void movePlayer(float dt);
+    void moveEnemyTowardsPlayer(float dt);
+    bool isNearPlayer();
     void increaseVelocity(float dt);
     void rotate(float dt, eRotation rot);
 };
@@ -162,7 +165,12 @@ public:
             isle->render();
         }
     };
-    static void updateAll(float dt);
+    void updateEnemies(float dt) {
+        for (Humanoid* enemy : enemies) {
+            if (enemy->isNearPlayer()) enemy->increaseVelocity(dt);
+            enemy->moveEnemyTowardsPlayer(dt);
+        }
+    };
 };
 
 class Player
