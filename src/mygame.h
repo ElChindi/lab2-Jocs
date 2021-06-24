@@ -241,6 +241,10 @@ public:
     Player* player;
     Sea sea;
     Skybox sky;
+
+    Camera* staticCam;
+    Camera* playingCam;
+    Camera* cam2D;
     
     
     static Scene* getInstance() {

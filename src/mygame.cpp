@@ -34,21 +34,27 @@ Scene::Scene() {
 	sea.mesh->createPlane(5000);
 	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
 	sea.color = Vector4(1, 1, 1, 0.8);
-	sea.texture = new Texture();
-	sea.texture->load("data/sea.tga");
+	sea.texture = Texture::Get("data/sea.tga");
 
 	//Initialize Skybox
 	sky = Skybox();
+
+	//Initialize Cameras
+	staticCam = new Camera();
+	staticCam->lookAt(Vector3(0.f, 100.f, 100.f), Vector3(0.f, 0.f, 0.f), Vector3(0.f, 1.f, 0.f));
+	staticCam->setPerspective(70.f, Game::instance->window_width / (float)Game::instance->window_height, 0.1f, 10000.f);
+
+	playingCam = new Camera();
+	playingCam->lookAt(Vector3(0.f, 100.f, 100.f), Vector3(0.f, 0.f, 0.f), Vector3(0.f, 1.f, 0.f));
+	playingCam->setPerspective(70.f, Game::instance->window_width / (float)Game::instance->window_height, 0.1f, 10000.f);
+
+	cam2D = new Camera();
+	cam2D->setOrthographic(0, Game::instance->window_width, Game::instance->window_height, 0, -1, 1);
 }
 
 //----------------------------------------GUI-----------------------------------------------//
 
 bool GUI::renderButton(float x, float y, float w, float h, Texture* tex, bool flipuvs) {
-	//camera code outside
-	Camera cam2D;
-	cam2D.setOrthographic(0, Game::instance->window_width, Game::instance->window_height, 0, -1, 1);
-	cam2D.enable();
-
 	Mesh quad;
 	quad.createQuad(x, y, w, h, flipuvs);
 
@@ -71,10 +77,10 @@ bool GUI::renderButton(float x, float y, float w, float h, Texture* tex, bool fl
 	shader->setUniform("u_color", hover ? hoverColor : normalColor);
 	Matrix44 quadModel;
 	shader->setUniform("u_model", quadModel);
-	shader->setUniform("u_viewprojection", cam2D.viewprojection_matrix);
+	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
 	shader->setUniform("u_texture", tex, 0);
 	shader->setUniform("u_time", Game::instance->time);
-	shader->setUniform("u_eye", cam2D.eye);
+	shader->setUniform("u_eye", Camera::current->eye);
 
 	quad.render(GL_TRIANGLES);
 	shader->disable();
@@ -115,6 +121,17 @@ void MainMenuStage::render() {
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
+	Scene::world->staticCam->enable();
+	Sea sea = Sea();
+	sea.mesh = new Mesh();
+	sea.mesh->createPlane(5000);
+	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
+	sea.color = Vector4(1, 1, 1, 0.8);
+	sea.texture = Texture::Get("data/sea.tga");
+	sea.render();
+
+	//Render buttons
+	Scene::world->cam2D->enable();
 	GUI::renderMainMenu();
 }
 
@@ -131,7 +148,8 @@ void SeaStage::render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//set the camera as default
-	Game::instance->camera->enable();
+	//Game::instance->camera->enable();
+	Scene::world->playingCam->enable();
 
 	//set flags
 	glDisable(GL_BLEND);
@@ -165,12 +183,12 @@ void SeaStage::update(double dt) {
 
 	//camera follows ship with lerp
 
-	Vector3 oldEye = Game::instance->camera->eye;
-	Vector3 oldCenter = Game::instance->camera->center;
+	Vector3 oldEye = Camera::current->eye;
+	Vector3 oldCenter = Camera::current->center;
 	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 20) - oldEye) * 0.03 * dt * 100 + oldEye;
 	Vector3 newCenter = (Scene::world->player->ship->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 100 + oldCenter;
 	assert((newEye.x != newCenter.x || newEye.y != newCenter.y || newEye.z != newCenter.z) && "Eye should be different to Center");
-	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
+	Camera::current->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 }
 //----------------------------------------LANDSTAGE----------------------------------------//
 void LandStage::render() {
@@ -181,7 +199,8 @@ void LandStage::render() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//set the camera as default
-	Game::instance->camera->enable();
+	//Game::instance->camera->enable();
+	Scene::world->playingCam->enable();
 
 	//set flags
 	glDisable(GL_BLEND);
@@ -230,12 +249,12 @@ void LandStage::update(double dt) {
 
 	//camera follows pirate with lerp
 
-	Vector3 oldEye = Game::instance->camera->eye;
-	Vector3 oldCenter = Game::instance->camera->center;
+	Vector3 oldEye = Camera::current->eye;
+	Vector3 oldCenter = Camera::current->center;
 	Vector3 newEye = (Scene::world->player->pirate->model * Vector3(0, 3, 3) - oldEye) * 0.03 * dt * 200 + oldEye;
 	Vector3 newCenter = (Scene::world->player->pirate->model * Vector3(0, 0, -10) - oldCenter) * 0.1 * dt * 100 + oldCenter;
 	assert((newEye.x != newCenter.x || newEye.y != newCenter.y || newEye.z != newCenter.z) && "Eye should be different to Center");
-	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
+	Camera::current->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 
 }
 //----------------------------------------Player----------------------------------------//
