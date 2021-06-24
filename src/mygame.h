@@ -189,7 +189,9 @@ public:
 class Sea : public EntityMesh
 {
 public:
-    Sea() {};
+    float tiles;
+    Sea() { this->tiles = 500; }
+    Sea(float tiles) { this->tiles = tiles; };
     void render();
 
 };
@@ -245,6 +247,13 @@ public:
     Camera* staticCam;
     Camera* playingCam;
     Camera* cam2D;
+
+    //for main menu bg
+    Sea bgSea;
+    Isle* bgIsle;
+    Ship* bgShip;
+
+    bool isPaused;
     
     
     static Scene* getInstance() {
@@ -280,6 +289,7 @@ public:
 class GUI {
 public:
     static bool renderButton(float x, float y, float w, float h, Texture* tex, bool flipuvs);
+    static void renderGradient();
     static void renderMainMenu();
     static void renderPauseMenu();
 };

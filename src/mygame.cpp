@@ -29,7 +29,7 @@ Scene::Scene() {
 	player = new Player();
 	
 	//Initialize Sea
-	sea = Sea();
+	sea = Sea(500);
 	sea.mesh = new Mesh();
 	sea.mesh->createPlane(5000);
 	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
@@ -41,7 +41,7 @@ Scene::Scene() {
 
 	//Initialize Cameras
 	staticCam = new Camera();
-	staticCam->lookAt(Vector3(0.f, 100.f, 100.f), Vector3(0.f, 0.f, 0.f), Vector3(0.f, 1.f, 0.f));
+	staticCam->lookAt(Vector3(-10.f, 20.f, 50.f), Vector3(10.f, 15.f, 45.f), Vector3(0.f, 1.f, 0.f));
 	staticCam->setPerspective(70.f, Game::instance->window_width / (float)Game::instance->window_height, 0.1f, 10000.f);
 
 	playingCam = new Camera();
@@ -50,6 +50,29 @@ Scene::Scene() {
 
 	cam2D = new Camera();
 	cam2D->setOrthographic(0, Game::instance->window_width, Game::instance->window_height, 0, -1, 1);
+
+	//Main Menu stuff
+	bgSea = Sea(50);
+	bgSea.mesh = new Mesh();
+	bgSea.mesh->createPlane(500);
+	bgSea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
+	bgSea.color = Vector4(1, 1, 1, 0.8);
+	bgSea.texture = Texture::Get("data/sea.tga");
+
+	bgIsle = new Isle();
+	auto it = std::find(Isle::isles.begin(), Isle::isles.end(), bgIsle);
+	Isle::isles.erase(it); //remove bgIsle from the true isles list
+	bgIsle->model.setIdentity();
+	bgIsle->scale(30);
+	bgIsle->model.translateGlobal(100, 0, 0);
+	bgIsle->loadMeshAndTexture("data/islas/1.obj", "data/islas/1.tga");
+
+	bgShip = new Ship();
+	bgShip->model.setTranslation(15, 0, 55);
+	bgShip->scale(2);
+	bgShip->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
+
+	isPaused = false;
 }
 
 //----------------------------------------GUI-----------------------------------------------//
@@ -79,13 +102,30 @@ bool GUI::renderButton(float x, float y, float w, float h, Texture* tex, bool fl
 	shader->setUniform("u_model", quadModel);
 	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
 	shader->setUniform("u_texture", tex, 0);
-	shader->setUniform("u_time", Game::instance->time);
 	shader->setUniform("u_eye", Camera::current->eye);
 
 	quad.render(GL_TRIANGLES);
 	shader->disable();
 
 	return hover && pressed;
+}
+
+void GUI::renderGradient() {
+	int xCenter = Game::instance->window_width / 2;
+	int yCenter = Game::instance->window_height / 2;
+
+	Mesh gradientBlack;
+	gradientBlack.createQuad(xCenter, yCenter, Game::instance->window_width, Game::instance->window_height, false);
+
+	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	shader->enable();
+	shader->setUniform("u_color", Vector4(0, 0, 0, 0.2));
+	Matrix44 quadModel;
+	shader->setUniform("u_model", quadModel);
+	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
+	shader->setUniform("u_eye", Camera::current->eye);
+
+	gradientBlack.render(GL_TRIANGLES);
 }
 
 void GUI::renderMainMenu() {
@@ -95,12 +135,37 @@ void GUI::renderMainMenu() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	int xCenter = Game::instance->window_width / 2;
+	//int yCenter = Game::instance->window_height / 2;
 
-	if (renderButton(xCenter, 300 + 45 * 0, 250, 30, Texture::Get("data/GUI/startGame.tga"), true)) {
+	renderGradient();
+
+	if (renderButton(xCenter - 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/startGame.tga"), true)) {
 		Game::instance->current_stage = 1;
 	}
-	renderButton(xCenter, 300 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
-	renderButton(xCenter, 300 + 45 * 2, 250, 30, Texture::Get("data/GUI/exit.tga"), true);
+	renderButton(xCenter - 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
+	renderButton(xCenter - 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/exit.tga"), true);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+}
+
+void GUI::renderPauseMenu() {
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	int xCenter = Game::instance->window_width / 2;
+	//int yCenter = Game::instance->window_height / 2;
+
+	renderGradient();
+
+	if (renderButton(xCenter + 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/resumeGame.tga"), true)) {
+		Scene::world->isPaused = false;
+	}
+	renderButton(xCenter + 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
+	renderButton(xCenter + 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/backToMenu.tga"), true);
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -122,13 +187,11 @@ void MainMenuStage::render() {
 	glDisable(GL_CULL_FACE);
 
 	Scene::world->staticCam->enable();
-	Sea sea = Sea();
-	sea.mesh = new Mesh();
-	sea.mesh->createPlane(5000);
-	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
-	sea.color = Vector4(1, 1, 1, 0.8);
-	sea.texture = Texture::Get("data/sea.tga");
-	sea.render();
+	Scene::world->sky.render();
+	Scene::world->bgSea.render();
+	Scene::world->bgIsle->render();
+	Scene::world->bgShip->render();
+
 
 	//Render buttons
 	Scene::world->cam2D->enable();
@@ -163,15 +226,21 @@ void SeaStage::render() {
 	Isle::renderAll();
 
 	//Draw the floor grid
-	drawGrid();
+	//drawGrid();
 	Scene::world->sea.render();
 
 	//render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
 
+	if (Scene::world->isPaused) {
+		Scene::world->cam2D->enable();
+		GUI::renderPauseMenu();
+	}
 }
 
 void SeaStage::update(double dt) {
+	if (Input::wasKeyPressed(SDL_SCANCODE_P) /*|| Input::gamepads[0].wasButtonPressed(Y_BUTTON)*/) Scene::world->isPaused = !Scene::world->isPaused;
+	if (Scene::world->isPaused) return;
 	
 	Scene::world->player->ship->move(dt);
 
@@ -182,7 +251,7 @@ void SeaStage::update(double dt) {
 	if (Input::wasKeyPressed(SDL_SCANCODE_E) || Input::gamepads[0].wasButtonPressed(Y_BUTTON)) Scene::world->player->comeAshore();
 
 	//camera follows ship with lerp
-
+	Scene::world->playingCam->enable();
 	Vector3 oldEye = Camera::current->eye;
 	Vector3 oldCenter = Camera::current->center;
 	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 20) - oldEye) * 0.03 * dt * 100 + oldEye;
@@ -215,15 +284,21 @@ void LandStage::render() {
 	Scene::world->currentIsle->renderEnemies();
 
 	//Draw the floor grid
-	drawGrid();
+	//drawGrid();
 	Scene::world->sea.render();
 
 	//render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
 
+	if (Scene::world->isPaused) {
+		Scene::world->cam2D->enable();
+		GUI::renderPauseMenu();
+	}
 }
 
 void LandStage::update(double dt) {
+	if (Input::wasKeyPressed(SDL_SCANCODE_P) /*|| Input::gamepads[0].wasButtonPressed(Y_BUTTON)*/) Scene::world->isPaused = !Scene::world->isPaused;
+	if (Scene::world->isPaused) return;
 
 	Scene::world->player->pirate->movePlayer(dt);
 	Scene::world->currentIsle->updateEnemies(dt);
@@ -248,6 +323,7 @@ void LandStage::update(double dt) {
 	else if (Input::isKeyPressed(SDL_SCANCODE_LEFT)) { Scene::world->player->pirate->rotate(dt * 3, antieclock); }
 
 	//camera follows pirate with lerp
+	Scene::world->playingCam->enable();
 
 	Vector3 oldEye = Camera::current->eye;
 	Vector3 oldCenter = Camera::current->center;
@@ -609,7 +685,7 @@ void Sea::render()
 	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
 	shader->setUniform("u_texture", texture, 0);
 	shader->setUniform("u_time", Game::instance->time);
-	shader->setUniform("u_texture_tiling", (float)500);
+	shader->setUniform("u_texture_tiling", tiles);
 	mesh->render(GL_TRIANGLES);
 	glDisable(GL_BLEND);
 	glDepthMask(true);
