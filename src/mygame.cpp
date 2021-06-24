@@ -41,6 +41,87 @@ Scene::Scene() {
 	sky = Skybox();
 }
 
+//----------------------------------------GUI-----------------------------------------------//
+
+bool GUI::renderButton(float x, float y, float w, float h, Texture* tex, bool flipuvs) {
+	//camera code outside
+	Camera cam2D;
+	cam2D.setOrthographic(0, Game::instance->window_width, Game::instance->window_height, 0, -1, 1);
+	cam2D.enable();
+
+	Mesh quad;
+	quad.createQuad(x, y, w, h, flipuvs);
+
+	Vector2 mouse = Input::mouse_position;
+	float halfW = w * 0.5;
+	float halfH = h * 0.5;
+	float minX = x - halfW;
+	float minY = y - halfH;
+	float maxX = x + halfW;
+	float maxY = y + halfH;
+
+	bool hover = mouse.x > minX && mouse.y > minY && mouse.x < maxX && mouse.y < maxY;
+	bool pressed = Input::isMousePressed(SDL_BUTTON_LEFT);
+
+	Vector4 normalColor = Vector4(1, 1, 1, 0.6);
+	Vector4 hoverColor = Vector4(1, 1, 1, 1);
+
+	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	shader->enable();
+	shader->setUniform("u_color", hover ? hoverColor : normalColor);
+	Matrix44 quadModel;
+	shader->setUniform("u_model", quadModel);
+	shader->setUniform("u_viewprojection", cam2D.viewprojection_matrix);
+	shader->setUniform("u_texture", tex, 0);
+	shader->setUniform("u_time", Game::instance->time);
+	shader->setUniform("u_eye", cam2D.eye);
+
+	quad.render(GL_TRIANGLES);
+	shader->disable();
+
+	return hover && pressed;
+}
+
+void GUI::renderMainMenu() {
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	int xCenter = Game::instance->window_width / 2;
+
+	if (renderButton(xCenter, 300 + 45 * 0, 250, 30, Texture::Get("data/GUI/startGame.tga"), true)) {
+		Game::instance->current_stage = 1;
+	}
+	renderButton(xCenter, 300 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
+	renderButton(xCenter, 300 + 45 * 2, 250, 30, Texture::Get("data/GUI/exit.tga"), true);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+}
+
+//----------------------------------------MAINMENUSTAGE----------------------------------------//
+
+void MainMenuStage::render() {
+	//set the clear color (the background color)
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+
+	// Clear the window and the depth buffer
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//set flags
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+
+	GUI::renderMainMenu();
+}
+
+void MainMenuStage::update(double dt) {
+
+}
+
 //----------------------------------------SEASTAGE----------------------------------------//
 void SeaStage::render() {
 	//set the clear color (the background color)
@@ -85,9 +166,10 @@ void SeaStage::update(double dt) {
 	//camera follows ship with lerp
 
 	Vector3 oldEye = Game::instance->camera->eye;
-	Vector3 oldCenter = Game::instance->camera->eye;
+	Vector3 oldCenter = Game::instance->camera->center;
 	Vector3 newEye = (Scene::world->player->ship->model * Vector3(0, 20, 20) - oldEye) * 0.03 * dt * 100 + oldEye;
 	Vector3 newCenter = (Scene::world->player->ship->model * Vector3(0, 0, -20) - oldCenter) * 0.1 * dt * 100 + oldCenter;
+	assert((newEye.x != newCenter.x || newEye.y != newCenter.y || newEye.z != newCenter.z) && "Eye should be different to Center");
 	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 }
 //----------------------------------------LANDSTAGE----------------------------------------//
@@ -149,9 +231,10 @@ void LandStage::update(double dt) {
 	//camera follows pirate with lerp
 
 	Vector3 oldEye = Game::instance->camera->eye;
-	Vector3 oldCenter = Game::instance->camera->eye;
+	Vector3 oldCenter = Game::instance->camera->center;
 	Vector3 newEye = (Scene::world->player->pirate->model * Vector3(0, 3, 3) - oldEye) * 0.03 * dt * 200 + oldEye;
 	Vector3 newCenter = (Scene::world->player->pirate->model * Vector3(0, 0, -10) - oldCenter) * 0.1 * dt * 100 + oldCenter;
+	assert((newEye.x != newCenter.x || newEye.y != newCenter.y || newEye.z != newCenter.z) && "Eye should be different to Center");
 	Game::instance->camera->lookAt(newEye, newCenter, Vector3(0, 1, 0));
 
 }
@@ -160,7 +243,7 @@ Player::Player() {
 	onShip = true;
 
 	ship = new Ship();
-	ship->model.translate(500, 0, -150);
+	//ship->model.translate(500, 0, -150);
 	ship->maxVelocity = 30;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
@@ -184,7 +267,7 @@ void Player::comeAshore()
 			//float scale = pirate->model._11;
 			pirate->model.setTranslation(spawnPosition.x, spawnPosition.y, spawnPosition.z);
 			pirate->scale(pirate->scaleFactor);
-			Game::instance->current_stage = 1;
+			Game::instance->current_stage = 2;
 		};
 	}
 };
@@ -195,7 +278,7 @@ void Player::comeAboard()
 	if ((pirate->getPosition() - ship->getPosition()).length() < 20) //to be adjusted
 	{
 		Scene::world->currentIsle = NULL;
-		Game::instance->current_stage = 0;
+		Game::instance->current_stage = 1;
 	}
 };
 
@@ -418,7 +501,7 @@ void Humanoid::movePlayer(float dt) {
 		//Check if in the isle
 		if (!isle->isAboveIsle(this) && isle->mesh->testSphereCollision(isle->model, targetCenter, 2 / isle->scaleFactor, coll, collnorm)) {
 			//std::cout << "Out" << std::endl;
-			Vector3 push_in = normalize(Vector3(coll.x - targetCenter.x, 0.000000001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
+			Vector3 push_in = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
 			model.translateGlobal(push_in.x, 0, push_in.z);
 		}
 			//model.translate(-dt * currentVelocity * dir.x, 0, -dt * currentVelocity * dir.z); 
@@ -429,7 +512,7 @@ void Humanoid::movePlayer(float dt) {
 
 		//if (currentVelocity > 5)
 		//	currentVelocity = clamp(currentVelocity - dt * 100, 5, maxVelocity);
-		Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.000000001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
+		Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
 		model.translateGlobal(-push_away.x, 0, -push_away.z);
 	}
 

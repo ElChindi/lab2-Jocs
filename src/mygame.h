@@ -210,6 +210,13 @@ public:
 	virtual void update(double dt) {};
 };
 
+class MainMenuStage : public Stage {
+public:
+    virtual void render();
+    virtual void update(double dt);
+
+};
+
 class SeaStage : public Stage {
 public:
 	virtual void render();
@@ -264,6 +271,13 @@ public:
 
 
     };
+};
+
+class GUI {
+public:
+    static bool renderButton(float x, float y, float w, float h, Texture* tex, bool flipuvs);
+    static void renderMainMenu();
+    static void renderPauseMenu();
 };
 
 

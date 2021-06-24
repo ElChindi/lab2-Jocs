@@ -32,7 +32,8 @@ public:
 	std::vector<Stage*> stages;
 
 	void InitStages() {
-		stages.reserve(2);
+		stages.reserve(3);
+		stages.push_back(new MainMenuStage());
 		stages.push_back(new SeaStage());
 		stages.push_back(new LandStage());
 	};
