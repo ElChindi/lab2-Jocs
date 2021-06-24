@@ -522,6 +522,8 @@ void Humanoid::moveEnemyTowardsPlayer(float dt) {
 	Vector3 playerPos = Scene::world->player->pirate->getPosition();
 	Vector3 enemyPos = this->getPosition();
 	Vector3 dir = Vector3(enemyPos.x - playerPos.x, 0, enemyPos.z - playerPos.z);
+	if (dir.x == 0 && dir.z == 0) return;
+	//assert((dir.x != 0 || dir.z != 0) && "Enemy is already at player position");
 	this->model.setFrontAndOrthonormalize(dir);
 	this->model.setUpAndOrthonormalize(Vector3(0,1,0));
 	this->scale(this->scaleFactor);
