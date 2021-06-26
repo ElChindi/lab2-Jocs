@@ -79,12 +79,10 @@ class Humanoid : public EntityMesh
 public:
     float maxVelocity;
     float currentVelocity;
+    Animation* idle;
 
-    Humanoid() {
-        shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
-        color = Vector4(1, 1, 1, 1);
-        currentVelocity = 0;
-    }
+    Humanoid();
+    void render();
     void move(float dt);
     void increaseVelocity(float dt);
     void rotate(float dt, eRotation rot);
@@ -193,6 +191,18 @@ public:
     void render();
 
 };
+//----------------------------------------ANIMATIONS----------------------------------------//
+class AnimationLibrary {
+public:
+    Animation* idle;
+
+        AnimationLibrary() {
+
+            idle = Animation::Get("data/models/pirate/idle.skanim");
+    }
+};
+
+
 
 
 //----------------------------------------STAGES----------------------------------------//

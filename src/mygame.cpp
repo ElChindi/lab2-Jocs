@@ -39,6 +39,7 @@ Scene::Scene() {
 
 	//Initialize Skybox
 	sky = Skybox();
+
 }
 
 //----------------------------------------SEASTAGE----------------------------------------//
@@ -58,7 +59,7 @@ void SeaStage::render() {
 	glDisable(GL_CULL_FACE);
 	
 	Scene::world->sky.render();
-	
+
 	Scene::world->player->ship->render();//cambiar por renderizar all ships
 
 	Isle::renderAll();
@@ -109,7 +110,6 @@ void LandStage::render() {
 	Scene::world->sky.render();
 	Scene::world->player->ship->render();//cambiar por renderizar all ships
 	Scene::world->player->pirate->render();
-
 	Isle::renderAll();
 	Scene::world->currentIsle->renderEnemies();
 
@@ -166,8 +166,13 @@ Player::Player() {
 
 	pirate = new Humanoid();
 	pirate->maxVelocity = 4;
-	pirate->scale(3);
-	pirate->loadMeshAndTexture("data/pirate.obj", "data/pirate.tga");
+	pirate->scale(2);
+	pirate->loadMeshAndTexture("data/models/pirate/pirate.mesh", "data/models/pirate/pineapple-32-32x.tga");
+
+	pirate->idle = Animation::Get("data/models/pirate/idle.skanim");
+	pirate->idle->assignTime(Game::instance->time);
+
+
 }
 
 void Player::comeAshore()
@@ -238,9 +243,9 @@ void Isle::createEnemies(int n) {
 		Humanoid* enemy = new Humanoid();
 		this->enemies.push_back(enemy);
 		enemy->model.setIdentity();
-		enemy->scale(3);
+		enemy->scale(2);
 		enemy->model.translateGlobal(pos.x, pos.y, pos.z);
-		enemy->loadMeshAndTexture("data/pirate.obj", "data/pirate.tga");
+		enemy->loadMeshAndTexture("data/models/skeli/skeli.mesh", "data/models/skeli/color-atlas-new.tga");
 		enemiesLeft -= 1;
 	}
 }
@@ -364,6 +369,14 @@ void Ship::move(float dt) {
 	}
 }
 //----------------------------------------Humanoid----------------------------------------//
+Humanoid::Humanoid() {
+	shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture_phong.fs");
+	color = Vector4(1, 1, 1, 1);
+	currentVelocity = 0;
+	idle = Animation::Get("data/models/skeli/idle.skanim");
+	idle->assignTime(Game::instance->time);
+}
+
 void Humanoid::move(float dt) {
 	if (currentVelocity > 0) {
 		Vector3 dir = Vector3();
@@ -466,13 +479,42 @@ void EntityMesh::render()
 	//render the mesh using the shader
 	mesh->render(GL_TRIANGLES);
 
+	//mesh->renderAnimated(GL_TRIANGLES, idle->skeleton);
+
+	//disable the shader after finishing rendering
+	shader->disable();
+}
+//----------------------------------------Humanoid Render----------------------------------------//
+void Humanoid::render()
+{
+	//Check Frustum
+	//if(!camera->)
+	//get the last camera that was activated
+	Camera* camera = Camera::current;
+	Matrix44 model = this->model;
+
+	//enable shader and pass uniforms
+	shader->enable();
+	shader->setUniform("u_color", color);
+	shader->setUniform("u_model", model);
+	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
+	shader->setUniform("u_texture", texture, 0);
+	shader->setUniform("u_time", Game::instance->time);
+	shader->setUniform("u_eye", camera->eye);
+
+	//render the mesh using the shader
+	//mesh->render(GL_TRIANGLES);
+
+	idle->assignTime(Game::instance->time);
+
+	mesh->renderAnimated(GL_TRIANGLES, &idle->skeleton);
+
 	//disable the shader after finishing rendering
 	shader->disable();
 }
 //----------------------------------------Sea----------------------------------------//
 void Sea::render()
 {
-
 	glLineWidth(1);
 	glEnable(GL_BLEND);
 	glDepthMask(false);
