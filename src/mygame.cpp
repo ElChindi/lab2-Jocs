@@ -380,7 +380,7 @@ Player::Player() {
 	onShip = true;
 
 	ship = new Ship();
-	//ship->model.translate(500, 0, -150);
+	ship->model.translate(500, 0, -150);
 	ship->maxVelocity = 30;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
@@ -595,7 +595,8 @@ Humanoid::Humanoid() {
 	shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture_phong.fs");
 	color = Vector4(1, 1, 1, 1);
 	currentVelocity = 0;
-	idle = Animation::Get("data/models/skeli/run.skanim");
+	maxVelocity = 2.5;
+	idle = Animation::Get("data/models/skeli/idle.skanim");
 	idle->assignTime(Game::instance->time);
 }
 
