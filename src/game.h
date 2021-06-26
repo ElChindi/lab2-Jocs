@@ -32,7 +32,8 @@ public:
 	std::vector<Stage*> stages;
 
 	void InitStages() {
-		stages.reserve(2);
+		stages.reserve(3);
+		stages.push_back(new MainMenuStage());
 		stages.push_back(new SeaStage());
 		stages.push_back(new LandStage());
 	};
@@ -40,7 +41,7 @@ public:
 	int current_stage;
 
 	//some vars
-	Camera* camera; //our global camera
+	//Camera* camera; //our global camera
 	bool mouse_locked; //tells if the mouse is locked (not seen)
 
 	Game( int window_width, int window_height, SDL_Window* window );

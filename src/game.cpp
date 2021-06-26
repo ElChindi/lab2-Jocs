@@ -37,7 +37,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	Scene::getInstance();
 	InitStages();
 	current_stage = 0;
-
+	/*
 	//OpenGL flags
 	glEnable( GL_CULL_FACE ); //render both sides of every triangle
 	glEnable( GL_DEPTH_TEST ); //check the occlusions using the Z buffer
@@ -58,7 +58,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 
 	//hide the cursor
-	SDL_ShowCursor(!mouse_locked); //hide or show the mouse
+	SDL_ShowCursor(!mouse_locked); //hide or show the mouse*/
 }
 
 //what to do when the image has to be draw
@@ -79,11 +79,11 @@ void Game::update(double seconds_elapsed)
 	angle += (float)seconds_elapsed * 10.0f;
 
 	//mouse input to rotate the cam
-	if ((Input::mouse_state & SDL_BUTTON_LEFT) || mouse_locked ) //is left button pressed?
-	{
-		camera->rotate(Input::mouse_delta.x * 0.005f, Vector3(0.0f,-1.0f,0.0f));
-		camera->rotate(Input::mouse_delta.y * 0.005f, camera->getLocalVector( Vector3(-1.0f,0.0f,0.0f)));
-	}
+	//if ((Input::mouse_state & SDL_BUTTON_LEFT) || mouse_locked ) //is left button pressed?
+	//{
+	//	camera->rotate(Input::mouse_delta.x * 0.005f, Vector3(0.0f,-1.0f,0.0f));
+	//	camera->rotate(Input::mouse_delta.y * 0.005f, camera->getLocalVector( Vector3(-1.0f,0.0f,0.0f)));
+	//}
 
 	//async input to move the camera around
 	//if (Input::isKeyPressed(SDL_SCANCODE_LSHIFT) ) speed *= 10; //move faster with left shift
@@ -143,7 +143,9 @@ void Game::onResize(int width, int height)
 {
     std::cout << "window resized: " << width << "," << height << std::endl;
 	glViewport( 0,0, width, height );
-	camera->aspect =  width / (float)height;
+	Scene::world->staticCam->aspect =  width / (float)height;
+	Scene::world->playingCam->aspect = width / (float)height;
+	Scene::world->cam2D->setOrthographic(0, width, height, 0, -1, 1);
 	window_width = width;
 	window_height = height;
 }

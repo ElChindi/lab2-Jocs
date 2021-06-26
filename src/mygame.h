@@ -15,7 +15,7 @@
 #define MAX_DISTANCE 2000
 #define ISLE_Y_OFFSET -1
 #define DIST_BTW_ISLES 500
-#define ISLE_TYPES 2
+#define ISLE_TYPES 6
 
 //Globals
 
@@ -82,8 +82,9 @@ public:
     Animation* idle;
 
     Humanoid();
-    void render();
-    void move(float dt);
+    void movePlayer(float dt);
+    void moveEnemyTowardsPlayer(float dt);
+    bool isNearPlayer();
     void increaseVelocity(float dt);
     void rotate(float dt, eRotation rot);
 };
@@ -160,7 +161,12 @@ public:
             isle->render();
         }
     };
-    static void updateAll(float dt);
+    void updateEnemies(float dt) {
+        for (Humanoid* enemy : enemies) {
+            if (enemy->isNearPlayer()) enemy->increaseVelocity(dt);
+            enemy->moveEnemyTowardsPlayer(dt);
+        }
+    };
 };
 
 class Player
@@ -179,7 +185,9 @@ public:
 class Sea : public EntityMesh
 {
 public:
-    Sea() {};
+    float tiles;
+    Sea() { this->tiles = 500; }
+    Sea(float tiles) { this->tiles = tiles; };
     void render();
 
 };
@@ -212,6 +220,13 @@ public:
 	virtual void update(double dt) {};
 };
 
+class MainMenuStage : public Stage {
+public:
+    virtual void render();
+    virtual void update(double dt);
+
+};
+
 class SeaStage : public Stage {
 public:
 	virtual void render();
@@ -236,6 +251,17 @@ public:
     Player* player;
     Sea sea;
     Skybox sky;
+
+    Camera* staticCam;
+    Camera* playingCam;
+    Camera* cam2D;
+
+    //for main menu bg
+    Sea bgSea;
+    Isle* bgIsle;
+    Ship* bgShip;
+
+    bool isPaused;
     
     
     static Scene* getInstance() {
@@ -266,6 +292,19 @@ public:
 
 
     };
+};
+
+class GUI {
+public:
+    static bool usingMouse;
+    static int currentButton;
+    static const int nMenuButtons = 3;
+    static const int nPauseButtons = 3;
+    static void navigateMenu(int nButtons);
+    static bool renderButton(int buttonNumber, float x, float y, float w, float h, Texture* tex, bool flipuvs);
+    static void renderGradient();
+    static void renderMainMenu();
+    static void renderPauseMenu();
 };
 
 
