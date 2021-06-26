@@ -595,7 +595,7 @@ Humanoid::Humanoid() {
 	shader = Shader::Get("data/shaders/skinning.vs", "data/shaders/texture_phong.fs");
 	color = Vector4(1, 1, 1, 1);
 	currentVelocity = 0;
-	idle = Animation::Get("data/models/skeli/idle.skanim");
+	idle = Animation::Get("data/models/skeli/run.skanim");
 	idle->assignTime(Game::instance->time);
 }
 

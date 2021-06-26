@@ -87,6 +87,8 @@ public:
     bool isNearPlayer();
     void increaseVelocity(float dt);
     void rotate(float dt, eRotation rot);
+
+    void render();
 };
 
 class Ship : public EntityMesh
