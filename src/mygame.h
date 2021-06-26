@@ -288,7 +288,12 @@ public:
 
 class GUI {
 public:
-    static bool renderButton(float x, float y, float w, float h, Texture* tex, bool flipuvs);
+    static bool usingMouse;
+    static int currentButton;
+    static const int nMenuButtons = 3;
+    static const int nPauseButtons = 3;
+    static void navigateMenu(int nButtons);
+    static bool renderButton(int buttonNumber, float x, float y, float w, float h, Texture* tex, bool flipuvs);
     static void renderGradient();
     static void renderMainMenu();
     static void renderPauseMenu();

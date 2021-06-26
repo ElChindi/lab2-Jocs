@@ -15,6 +15,8 @@
 Scene* Scene::world = NULL;
 std::vector<Ship*> Ship::ships;
 std::vector<Isle*> Isle::isles;
+bool GUI::usingMouse = false;
+int GUI::currentButton = 0;
 
 
 //----------------------------------------Scene----------------------------------------//
@@ -73,11 +75,25 @@ Scene::Scene() {
 	bgShip->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
 
 	isPaused = false;
+
+	GUI::usingMouse = false;
+	GUI::currentButton = 0;
 }
 
 //----------------------------------------GUI-----------------------------------------------//
 
-bool GUI::renderButton(float x, float y, float w, float h, Texture* tex, bool flipuvs) {
+void GUI::navigateMenu(int nButtons) {
+	if (Input::wasKeyPressed(SDL_SCANCODE_W) || Input::wasKeyPressed(SDL_SCANCODE_UP) || Input::gamepads[0].hat == PAD_UP) {
+		GUI::usingMouse = false;
+		GUI::currentButton = (nButtons + GUI::currentButton - 1) % nButtons; //to dont have negative n
+	}
+	if (Input::wasKeyPressed(SDL_SCANCODE_S) || Input::wasKeyPressed(SDL_SCANCODE_DOWN) || Input::gamepads[0].hat == PAD_DOWN) {
+		GUI::usingMouse = false;
+		GUI::currentButton = (GUI::currentButton + 1) % nButtons;
+	}
+}
+
+bool GUI::renderButton(int buttonNumber, float x, float y, float w, float h, Texture* tex, bool flipuvs) {
 	Mesh quad;
 	quad.createQuad(x, y, w, h, flipuvs);
 
@@ -90,14 +106,20 @@ bool GUI::renderButton(float x, float y, float w, float h, Texture* tex, bool fl
 	float maxY = y + halfH;
 
 	bool hover = mouse.x > minX && mouse.y > minY && mouse.x < maxX && mouse.y < maxY;
-	bool pressed = Input::isMousePressed(SDL_BUTTON_LEFT);
+	if (hover) {
+		GUI::usingMouse = true;
+		GUI::currentButton = buttonNumber;
+	}
+	bool focus = hover || (!GUI::usingMouse && GUI::currentButton == buttonNumber);
+	bool pressed = GUI::usingMouse && Input::isMousePressed(SDL_BUTTON_LEFT) || 
+		!GUI::usingMouse && (Input::gamepads[0].isButtonPressed(A_BUTTON) || Input::isKeyPressed(SDL_SCANCODE_RETURN));
 
 	Vector4 normalColor = Vector4(1, 1, 1, 0.6);
 	Vector4 hoverColor = Vector4(1, 1, 1, 1);
 
 	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	shader->enable();
-	shader->setUniform("u_color", hover ? hoverColor : normalColor);
+	shader->setUniform("u_color", focus ? hoverColor : normalColor);
 	Matrix44 quadModel;
 	shader->setUniform("u_model", quadModel);
 	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
@@ -107,7 +129,7 @@ bool GUI::renderButton(float x, float y, float w, float h, Texture* tex, bool fl
 	quad.render(GL_TRIANGLES);
 	shader->disable();
 
-	return hover && pressed;
+	return focus && pressed;
 }
 
 void GUI::renderGradient() {
@@ -139,11 +161,13 @@ void GUI::renderMainMenu() {
 
 	renderGradient();
 
-	if (renderButton(xCenter - 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/startGame.tga"), true)) {
+	if (renderButton(0, xCenter - 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/startGame.tga"), true)) {
 		Game::instance->current_stage = 1;
 	}
-	renderButton(xCenter - 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
-	renderButton(xCenter - 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/exit.tga"), true);
+	renderButton(1, xCenter - 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
+	if (renderButton(2, xCenter - 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/exit.tga"), true)) {
+		Game::instance->must_exit = true;
+	}
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -161,11 +185,16 @@ void GUI::renderPauseMenu() {
 
 	renderGradient();
 
-	if (renderButton(xCenter + 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/resumeGame.tga"), true)) {
+	if (renderButton(0, xCenter + 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/resumeGame.tga"), true)) {
 		Scene::world->isPaused = false;
 	}
-	renderButton(xCenter + 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
-	renderButton(xCenter + 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/backToMenu.tga"), true);
+	renderButton(1, xCenter + 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
+	if (renderButton(2, xCenter + 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/backToMenu.tga"), true)) {
+		Scene::world->isPaused = false;
+		Game::instance->current_stage = 0;
+		GUI::usingMouse = true;
+		GUI::currentButton = 0;
+	}
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -199,7 +228,7 @@ void MainMenuStage::render() {
 }
 
 void MainMenuStage::update(double dt) {
-
+	GUI::navigateMenu(GUI::nMenuButtons);
 }
 
 //----------------------------------------SEASTAGE----------------------------------------//
@@ -239,8 +268,15 @@ void SeaStage::render() {
 }
 
 void SeaStage::update(double dt) {
-	if (Input::wasKeyPressed(SDL_SCANCODE_P) /*|| Input::gamepads[0].wasButtonPressed(Y_BUTTON)*/) Scene::world->isPaused = !Scene::world->isPaused;
-	if (Scene::world->isPaused) return;
+	if (Input::wasKeyPressed(SDL_SCANCODE_P) || Input::gamepads[0].wasButtonPressed(START_BUTTON)) {
+		Scene::world->isPaused = !Scene::world->isPaused;
+		GUI::usingMouse = false;
+		GUI::currentButton = 0;
+	}
+	if (Scene::world->isPaused) {
+		GUI::navigateMenu(GUI::nPauseButtons);
+		return;
+	}
 	
 	Scene::world->player->ship->move(dt);
 
@@ -297,8 +333,15 @@ void LandStage::render() {
 }
 
 void LandStage::update(double dt) {
-	if (Input::wasKeyPressed(SDL_SCANCODE_P) /*|| Input::gamepads[0].wasButtonPressed(Y_BUTTON)*/) Scene::world->isPaused = !Scene::world->isPaused;
-	if (Scene::world->isPaused) return;
+	if (Input::wasKeyPressed(SDL_SCANCODE_P) || Input::gamepads[0].wasButtonPressed(START_BUTTON)) {
+		Scene::world->isPaused = !Scene::world->isPaused;
+		GUI::usingMouse = false;
+		GUI::currentButton = 0;
+	}
+	if (Scene::world->isPaused) {
+		GUI::navigateMenu(GUI::nPauseButtons);
+		return;
+	}
 
 	Scene::world->player->pirate->movePlayer(dt);
 	Scene::world->currentIsle->updateEnemies(dt);
