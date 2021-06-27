@@ -24,7 +24,7 @@ Scene::Scene() {
 	//load one texture without using the Texture Manager (Texture::Get would use the manager)
 
 	//create isles
-	Isle::createRandomIsles(20, MAX_DISTANCE);
+	Isle::createRandomIsles(500, MAX_DISTANCE);
 	currentIsle = NULL; //change if we start in an isle
 	
 	//Initialize Player
@@ -381,7 +381,7 @@ Player::Player() {
 
 	ship = new Ship();
 	//ship->model.translate(500, 0, -150);
-	ship->maxVelocity = 30;
+	ship->maxVelocity = 50;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
 

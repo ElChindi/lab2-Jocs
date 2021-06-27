@@ -12,7 +12,7 @@
 #include "libs/bass.h"
 
 #define FLOOR_HEIGHT 0.32
-#define MAX_DISTANCE 2000
+#define MAX_DISTANCE 20000
 #define ISLE_Y_OFFSET -1
 #define DIST_BTW_ISLES 500
 #define ISLE_TYPES 6
