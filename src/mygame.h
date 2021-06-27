@@ -77,8 +77,11 @@ class EntityMesh : public Entity
 class Humanoid : public EntityMesh
 {
 public:
+    static std::vector<Animation*> playerAnimations;
+    static std::vector<Animation*> skeliAnimations;
     float maxVelocity;
     float currentVelocity;
+    Animation* currAnimation;
     Animation* idle;
 
     Humanoid();
@@ -87,6 +90,9 @@ public:
     bool isNearPlayer();
     void increaseVelocity(float dt);
     void rotate(float dt, eRotation rot);
+
+    //void attack();
+    //void dodge();
 
     void render();
 };
