@@ -85,8 +85,7 @@ public:
 
     Humanoid();
     void movePlayer(float dt);
-    void moveEnemyTowardsPlayer(float dt);
-    bool isNearPlayer();
+
     void increaseVelocity(float dt);
     void rotate(float dt, eRotation rot);
 
@@ -111,6 +110,15 @@ public:
         skeliAnimations.push_back(Animation::Get("data/models/skeli/death.skanim"));
 
     }
+};
+
+class Skeli : public Humanoid
+{
+public:
+    Skeli() {}
+    void moveEnemyTowardsPlayer(float dt);
+    bool isNearPlayer();
+
 };
 
 class Ship : public EntityMesh
@@ -151,7 +159,7 @@ public:
     char type;
     std::vector<EntityMesh*> noCollisionableThings;
     std::vector<EntityMesh*> collisionableThings;
-    std::vector<Humanoid*> enemies;
+    std::vector<Skeli*> enemies;
 
     Isle() {
         shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
@@ -176,7 +184,7 @@ public:
     static Vector3 getNewIslePosition(int minX, int maxX, int minZ, int maxZ);
 
     void renderEnemies() {
-        for (Humanoid* enemy : enemies) {
+        for (Skeli* enemy : enemies) {
             enemy->render();
         }
     };
@@ -186,7 +194,7 @@ public:
         }
     };
     void updateEnemies(float dt) {
-        for (Humanoid* enemy : enemies) {
+        for (Skeli* enemy : enemies) {
             if (enemy->isNearPlayer()) enemy->increaseVelocity(dt);
             enemy->moveEnemyTowardsPlayer(dt);
         }
@@ -295,7 +303,7 @@ public:
 
     static AudioManager* audio;
 
-    static std::map<std::string, HSAMPLE*> sSamplesLoaded;
+    static std::map<std::string, HCHANNEL*> sSamplesLoaded;
 
 
 
@@ -329,10 +337,11 @@ public:
         HCHANNEL hSampleChannel = NULL;
 
         //check if loaded
-        std::map<std::string, HSAMPLE*>::iterator it = sSamplesLoaded.find(filename);
+        std::map<std::string, HCHANNEL*>::iterator it = sSamplesLoaded.find(filename);
         if (it != sSamplesLoaded.end())
         {
-            hSampleChannel = BASS_SampleGetChannel(*it->second, false);
+            hSampleChannel = *it->second;
+            //hSampleChannel = BASS_SampleGetChannel(*it->second, false);
             BASS_ChannelPlay(hSampleChannel, true);
             return hSampleChannel;
         }
@@ -342,8 +351,9 @@ public:
 
             HSAMPLE hSample = BASS_SampleLoad(false, filename, 0, 0, 20, 0);
 
-            sSamplesLoaded[filename] = &hSample;
+            
             hSampleChannel = BASS_SampleGetChannel(hSample, false);
+            sSamplesLoaded[filename] = &hSampleChannel;
             BASS_ChannelPlay(hSampleChannel, true);
 
             return hSampleChannel;
@@ -364,10 +374,14 @@ public:
         HCHANNEL hSampleChannel = NULL;
 
         //check if loaded
-        std::map<std::string, HSAMPLE*>::iterator it = sSamplesLoaded.find(filename);
+        std::map<std::string, HCHANNEL*>::iterator it = sSamplesLoaded.find(filename);
         if (it != sSamplesLoaded.end())
         {
-            hSampleChannel = BASS_SampleGetChannel(*it->second, false);
+            hSampleChannel = *it->second;
+
+            //debug
+            DWORD a = BASS_ChannelIsActive(hSampleChannel);
+
             BASS_ChannelPlay(hSampleChannel, true);
             return hSampleChannel;
         }
@@ -377,16 +391,17 @@ public:
 
             HSAMPLE hSample = BASS_SampleLoad(false, filename, 0, 0, 20, BASS_SAMPLE_LOOP);
 
-            sSamplesLoaded[filename] = &hSample;
             hSampleChannel = BASS_SampleGetChannel(hSample, false);
+            sSamplesLoaded[filename] = &hSampleChannel;
             BASS_ChannelPlay(hSampleChannel, true);
+            DWORD a = BASS_ChannelIsActive(hSampleChannel);
 
             return hSampleChannel;
         };
     }
 
     void stop(HCHANNEL hChannel) {
-            BASS_ChannelStop(hChannel);
+        BASS_ChannelPause(hChannel);
     }
 
 };

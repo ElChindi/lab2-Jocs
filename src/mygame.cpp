@@ -14,7 +14,7 @@
 
 std::vector<Animation*> Humanoid::playerAnimations;
 std::vector<Animation*> Humanoid::skeliAnimations;
-std::map<std::string, HSAMPLE*> AudioManager::sSamplesLoaded;
+std::map<std::string, HCHANNEL*> AudioManager::sSamplesLoaded;
 
 AudioManager* AudioManager::audio = NULL;
 Scene* Scene::world = NULL;
@@ -477,7 +477,7 @@ void Isle::createEnemies(int n) {
 	int enemiesLeft = n;
 	while (enemiesLeft > 0) {
 		Vector3 pos = getNewEnemyPosition();
-		Humanoid* enemy = new Humanoid();
+		Skeli* enemy = new Skeli();
 		this->enemies.push_back(enemy);
 		enemy->model.setIdentity();
 		enemy->scale(2);
@@ -696,7 +696,7 @@ void Humanoid::movePlayer(float dt) {
 
 }
 
-void Humanoid::moveEnemyTowardsPlayer(float dt) {
+void Skeli::followPlayer(float dt) {
 	Vector3 playerPos = Scene::world->player->pirate->getPosition();
 	Vector3 enemyPos = this->getPosition();
 	Vector3 dir = Vector3(enemyPos.x - playerPos.x, 0, enemyPos.z - playerPos.z);
@@ -710,10 +710,10 @@ void Humanoid::moveEnemyTowardsPlayer(float dt) {
 	currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
 }
 
-bool Humanoid::isNearPlayer() {
+bool Skeli::isNearPlayer() {
 	Vector3 playerPos = Scene::world->player->pirate->getPosition();
 	Vector3 enemyPos = this->getPosition();
-	return ((playerPos - enemyPos).length() < 50);
+	return ((playerPos - enemyPos).length() < 30);
 }
 
 void Humanoid::increaseVelocity(float dt) {
@@ -766,6 +766,7 @@ void Humanoid::render()
 	//enable shader and pass uniforms
 	shader->enable();
 	shader->setUniform("u_color", color);
+	model.rotate(180.0f * DEG2RAD, Vector3(0, 1, 0));
 	shader->setUniform("u_model", model);
 	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 	shader->setUniform("u_texture", texture, 0);

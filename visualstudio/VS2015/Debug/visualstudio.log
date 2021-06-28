@@ -75,6 +75,7 @@ C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(688,70): warning C4244:
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(693,96): warning C4305: 'argumento': truncamiento de 'double' a 'float'
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(726,20): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(728,21): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\mygame.cpp(769,49): warning C4305: 'argumento': truncamiento de 'double' a 'float'
   utils.cpp
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\framework.h(372,105): warning C4244: 'return': conversión de 'double' a 'float'; posible pérdida de datos
 C:\Users\dquin\Documents\GitHub\lab2-Jocs\src\utils.cpp(83,13): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
