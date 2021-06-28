@@ -121,7 +121,7 @@ class Skeli : public Humanoid
 {
 public:
     Skeli() {}
-    void moveEnemyTowardsPlayer(float dt);
+    void followPlayer(float dt);
     bool isNearPlayer();
 
 };
@@ -207,7 +207,7 @@ public:
     void updateEnemies(float dt) {
         for (Skeli* enemy : enemies) {
             if (enemy->isNearPlayer()) enemy->increaseVelocity(dt);
-            enemy->moveEnemyTowardsPlayer(dt);
+            enemy->followPlayer(dt);
         }
     };
 };
