@@ -12,7 +12,7 @@
 #include "libs/bass.h"
 
 #define FLOOR_HEIGHT 0.32
-#define MAX_DISTANCE 2000
+#define MAX_DISTANCE 8000
 #define ISLE_Y_OFFSET -1
 #define DIST_BTW_ISLES 500
 #define ISLE_TYPES 6
@@ -87,7 +87,6 @@ public:
     float maxVelocity;
     float currentVelocity;
     Animation* currAnimation;
-    Animation* idle;
 
     Humanoid();
     void movePlayer(float dt);
@@ -100,6 +99,23 @@ public:
     //void dodge();
 
     void render();
+
+    static void loadAnimations() {
+        playerAnimations.reserve(6);
+        playerAnimations.push_back(Animation::Get("data/models/pirate/idle.skanim"));
+        playerAnimations.push_back(Animation::Get("data/models/pirate/runf.skanim"));
+        playerAnimations.push_back(Animation::Get("data/models/pirate/runb.skanim"));
+        playerAnimations.push_back(Animation::Get("data/models/pirate/attack.skanim"));
+        playerAnimations.push_back(Animation::Get("data/models/pirate/dodge.skanim"));
+        playerAnimations.push_back(Animation::Get("data/models/pirate/death.skanim"));
+
+        skeliAnimations.reserve(4);
+        skeliAnimations.push_back(Animation::Get("data/models/skeli/idle.skanim"));
+        skeliAnimations.push_back(Animation::Get("data/models/skeli/run.skanim"));
+        skeliAnimations.push_back(Animation::Get("data/models/skeli/attack.skanim"));
+        skeliAnimations.push_back(Animation::Get("data/models/skeli/death.skanim"));
+
+    }
 };
 
 class Ship : public EntityMesh
@@ -218,18 +234,6 @@ public:
     void render();
 
 };
-//----------------------------------------ANIMATIONS----------------------------------------//
-class AnimationLibrary {
-public:
-    Animation* idle;
-
-        AnimationLibrary() {
-
-            idle = Animation::Get("data/models/pirate/idle.skanim");
-    }
-};
-
-
 
 
 //----------------------------------------STAGES----------------------------------------//
@@ -264,7 +268,9 @@ public:
 class Scene {
 public:
     static Scene* world;
+
     Scene();
+
 
     Isle* currentIsle; //store current isle from list of isles
     Player* player;
@@ -281,6 +287,8 @@ public:
     Ship* bgShip;
 
     bool isPaused;
+
+    HCHANNEL currentMusic;
     
     
     static Scene* getInstance() {
@@ -295,22 +303,103 @@ public:
 //----------------------------------------AudioManager----------------------------------------//
 class AudioManager {
 public:
+
     static AudioManager* audio;
+
+    static std::map<std::string, HSAMPLE*> sSamplesLoaded;
+
+
+
     AudioManager() {
         //Inicializamos BASS al arrancar el juego (id_del_device, muestras por segundo, ...)
         if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
         {
             //error abriendo la tarjeta de sonido...
         }
+    };
+
+    static AudioManager* getInstance() {
+        if (!audio) {
+            audio = new AudioManager();
+        }
+        return audio;
+    }
+
+    HCHANNEL play(const char* filename) {
+
+        assert(filename);
+
+        if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
+        {
+            //error abriendo la tarjeta de sonido...
+        }
 
         //El handler para un sample
-        HSAMPLE hSample;
-
+        HSAMPLE hSample = NULL;
         //El handler para un canal
-        HCHANNEL hSampleChannel;
+        HCHANNEL hSampleChannel = NULL;
 
+        //check if loaded
+        std::map<std::string, HSAMPLE*>::iterator it = sSamplesLoaded.find(filename);
+        if (it != sSamplesLoaded.end())
+        {
+            hSampleChannel = BASS_SampleGetChannel(*it->second, false);
+            BASS_ChannelPlay(hSampleChannel, true);
+            return hSampleChannel;
+        }
+        else
+        {
+            //load it
 
-    };
+            HSAMPLE hSample = BASS_SampleLoad(false, filename, 0, 0, 20, 0);
+
+            sSamplesLoaded[filename] = &hSample;
+            hSampleChannel = BASS_SampleGetChannel(hSample, false);
+            BASS_ChannelPlay(hSampleChannel, true);
+
+            return hSampleChannel;
+        };
+    }
+    HCHANNEL playloop(const char* filename) {
+
+        assert(filename);
+
+        if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
+        {
+            //error abriendo la tarjeta de sonido...
+        }
+
+        //El handler para un sample
+        HSAMPLE hSample = NULL;
+        //El handler para un canal
+        HCHANNEL hSampleChannel = NULL;
+
+        //check if loaded
+        std::map<std::string, HSAMPLE*>::iterator it = sSamplesLoaded.find(filename);
+        if (it != sSamplesLoaded.end())
+        {
+            hSampleChannel = BASS_SampleGetChannel(*it->second, false);
+            BASS_ChannelPlay(hSampleChannel, true);
+            return hSampleChannel;
+        }
+        else
+        {
+            //load it
+
+            HSAMPLE hSample = BASS_SampleLoad(false, filename, 0, 0, 20, BASS_SAMPLE_LOOP);
+
+            sSamplesLoaded[filename] = &hSample;
+            hSampleChannel = BASS_SampleGetChannel(hSample, false);
+            BASS_ChannelPlay(hSampleChannel, true);
+
+            return hSampleChannel;
+        };
+    }
+
+    void stop(HCHANNEL hChannel) {
+            BASS_ChannelStop(hChannel);
+    }
+
 };
 
 class GUI {

@@ -12,6 +12,11 @@
 
 #include <cmath>
 
+std::vector<Animation*> Humanoid::playerAnimations;
+std::vector<Animation*> Humanoid::skeliAnimations;
+std::map<std::string, HSAMPLE*> AudioManager::sSamplesLoaded;
+
+AudioManager* AudioManager::audio = NULL;
 Scene* Scene::world = NULL;
 std::vector<Ship*> Ship::ships;
 std::vector<Isle*> Isle::isles;
@@ -21,14 +26,17 @@ int GUI::currentButton = 0;
 
 //----------------------------------------Scene----------------------------------------//
 Scene::Scene() {
-	//load one texture without using the Texture Manager (Texture::Get would use the manager)
 
-	//create isles
-	Isle::createRandomIsles(20, MAX_DISTANCE);
-	currentIsle = NULL; //change if we start in an isle
-	
+
+	//Load animations
+	Humanoid::loadAnimations();
+
 	//Initialize Player
 	player = new Player();
+
+	//create isles
+	Isle::createRandomIsles(100, MAX_DISTANCE);
+	currentIsle = NULL; //change if we start in an isle
 	
 	//Initialize Sea
 	sea = Sea(500);
@@ -78,6 +86,9 @@ Scene::Scene() {
 
 	GUI::usingMouse = false;
 	GUI::currentButton = 0;
+
+	currentMusic = AudioManager::audio->playloop("data/music/Island.wav");
+
 }
 
 //----------------------------------------GUI-----------------------------------------------//
@@ -163,6 +174,8 @@ void GUI::renderMainMenu() {
 
 	if (renderButton(0, xCenter - 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/startGame.tga"), true)) {
 		Game::instance->current_stage = 1;
+		AudioManager::audio->stop(Scene::world->currentMusic);
+		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Onepiece.wav");
 	}
 	renderButton(1, xCenter - 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
 	if (renderButton(2, xCenter - 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/exit.tga"), true)) {
@@ -204,6 +217,7 @@ void GUI::renderPauseMenu() {
 //----------------------------------------MAINMENUSTAGE----------------------------------------//
 
 void MainMenuStage::render() {
+
 	//set the clear color (the background color)
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -383,7 +397,7 @@ Player::Player() {
 
 	ship = new Ship();
 	ship->model.translate(500, 0, -150);
-	ship->maxVelocity = 30;
+	ship->maxVelocity = 40;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
 
@@ -393,10 +407,7 @@ Player::Player() {
 	pirate->scale(2);
 	pirate->loadMeshAndTexture("data/models/pirate/pirate.mesh", "data/models/pirate/pineapple-32-32x.tga");
 
-	pirate->idle = Animation::Get("data/models/pirate/idle.skanim");
-	pirate->idle->assignTime(Game::instance->time);
-
-
+	pirate->currAnimation = pirate->playerAnimations[0];
 }
 
 void Player::comeAshore()
@@ -412,6 +423,8 @@ void Player::comeAshore()
 			pirate->model.setTranslation(spawnPosition.x, spawnPosition.y, spawnPosition.z);
 			pirate->scale(pirate->scaleFactor);
 			Game::instance->current_stage = 2;
+			AudioManager::audio->stop(Scene::world->currentMusic);
+			Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav");
 		};
 	}
 };
@@ -423,6 +436,8 @@ void Player::comeAboard()
 	{
 		Scene::world->currentIsle = NULL;
 		Game::instance->current_stage = 1;
+		AudioManager::audio->stop(Scene::world->currentMusic);
+		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Onepiece.wav");
 	}
 };
 
@@ -626,8 +641,8 @@ Humanoid::Humanoid() {
 	color = Vector4(1, 1, 1, 1);
 	currentVelocity = 0;
 	maxVelocity = 2.5;
-	idle = Animation::Get("data/models/skeli/idle.skanim");
-	idle->assignTime(Game::instance->time);
+	currAnimation = skeliAnimations[0];
+	currAnimation->assignTime(Game::instance->time);
 }
 
 
@@ -638,37 +653,48 @@ void Humanoid::movePlayer(float dt) {
 			/*model.translate(0, 0, -dt * currentVelocity * 0.6);
 			model.translate(-dt * currentVelocity * 0.6, 0, 0);*/
 			dir = Vector3(-0.6, 0, -0.6);
+			currAnimation = playerAnimations[1];
 		}
 		else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_A))) {
 			/*model.translate(0, 0, dt * currentVelocity * 0.3);
 			model.translate(-dt * currentVelocity * 0.3, 0, 0);*/
 			dir = Vector3(-0.3, 0, 0.3);
+			currAnimation = playerAnimations[2];
 		}
 		else if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_D))) {
 			/*model.translate(0, 0, -dt * currentVelocity * 0.6);
 			model.translate(dt * currentVelocity * 0.6, 0, 0);*/
 			dir = Vector3(0.6, 0, -0.6);
+			currAnimation = playerAnimations[1];
 		}
 		else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_D))) {
 			/*model.translate(0, 0, dt * currentVelocity * 0.3);
 			model.translate(dt * currentVelocity * 0.3, 0, 0);*/
 			dir = Vector3(0.3, 0, 0.3);
+			currAnimation = playerAnimations[2];
 		}
 		else if(Input::gamepads[0].direction & PAD_UP || (Input::isKeyPressed(SDL_SCANCODE_W))){
 			//model.translate(0, 0, -dt * currentVelocity); 
 			dir = Vector3(0, 0, -1);
+			currAnimation = playerAnimations[1];
 		}
 		else if (Input::gamepads[0].direction & PAD_DOWN || (Input::isKeyPressed(SDL_SCANCODE_S))) {
 			//model.translate(0, 0, dt * currentVelocity * 0.5);
 			dir = Vector3(0, 0, 0.5);
+			currAnimation = playerAnimations[2];
 		}
 		else if (Input::gamepads[0].direction & PAD_LEFT || (Input::isKeyPressed(SDL_SCANCODE_A))) {
 			//model.translate(-dt * currentVelocity * 0.75, 0, 0);
 			dir = Vector3(-0.75, 0, 0);
+			currAnimation = playerAnimations[1];
 		}
 		else if (Input::gamepads[0].direction & PAD_RIGHT || (Input::isKeyPressed(SDL_SCANCODE_D))) {
 			//model.translate(dt * currentVelocity * 0.75, 0, 0);
 			dir = Vector3(0.75, 0, 0);
+			currAnimation = playerAnimations[1];
+		}
+		else {
+			currAnimation = playerAnimations[0];
 		}
 
 		
@@ -779,9 +805,9 @@ void Humanoid::render()
 	//render the mesh using the shader
 	//mesh->render(GL_TRIANGLES);
 
-	idle->assignTime(Game::instance->time);
+	currAnimation->assignTime(Game::instance->time);
 
-	mesh->renderAnimated(GL_TRIANGLES, &idle->skeleton);
+	mesh->renderAnimated(GL_TRIANGLES, &currAnimation->skeleton);
 
 	//disable the shader after finishing rendering
 	shader->disable();

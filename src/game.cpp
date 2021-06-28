@@ -35,6 +35,8 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	mouse_locked = false;
 
 	Scene::getInstance();
+	//Load SoundManager
+	AudioManager::getInstance();
 	InitStages();
 	current_stage = 0;
 	/*
