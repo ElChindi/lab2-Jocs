@@ -63,6 +63,11 @@ class EntityMesh : public Entity
         Texture* texture;
         Shader* shader;
         Vector4 color;
+
+        EntityMesh() {
+            shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
+            color = Vector4(1, 1, 1, 1);
+        }
  
         //methods overwritten 
         void render();
@@ -174,7 +179,7 @@ public:
     }
     void createStuff();
     void createEnemies(int n);
-    Vector3 getNewEnemyPosition();
+    Vector3 getValidPosition();
     
 
     bool isAboveIsle(Vector3 pos);
@@ -182,6 +187,12 @@ public:
     static void createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ);
     static void createRandomIsles(int number, int maxDist) { createRandomIsles(number, -maxDist, maxDist, -maxDist, maxDist); };
     static Vector3 getNewIslePosition(int minX, int maxX, int minZ, int maxZ);
+
+    void renderStuff() {
+        for (EntityMesh* stuff : noCollisionableThings) {
+            stuff->render();
+        }
+    };
 
     void renderEnemies() {
         for (Skeli* enemy : enemies) {
