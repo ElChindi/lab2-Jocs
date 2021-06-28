@@ -122,7 +122,7 @@ class Skeli : public Humanoid
 public:
     Skeli() {}
     void followPlayer(float dt);
-    bool isNearPlayer();
+    bool isNearPlayer(int radius);
 
 };
 
@@ -153,6 +153,8 @@ public:
     void rotate(float dt, eRotation rot);
     void move(float dt);
 
+    void render();
+
     static void renderAll();
     static void updateAll(float dt);
 };
@@ -165,11 +167,13 @@ public:
     std::vector<EntityMesh*> noCollisionableThings;
     std::vector<EntityMesh*> collisionableThings;
     std::vector<Skeli*> enemies;
+    Skeli* activeEnemy;
 
     Isle() {
         shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_phong.fs");
         color = Vector4(1, 1, 1, 1);
         isles.push_back(this);
+        activeEnemy = NULL;
     }
 
 
@@ -206,8 +210,32 @@ public:
     };
     void updateEnemies(float dt) {
         for (Skeli* enemy : enemies) {
-            if (enemy->isNearPlayer()) enemy->increaseVelocity(dt);
-            enemy->followPlayer(dt);
+
+
+            if (activeEnemy == NULL & enemy->isNearPlayer(4))
+            {
+                activeEnemy = enemy;
+                enemy->followPlayer(dt);
+            }
+            else if (activeEnemy == enemy & enemy->isNearPlayer(4))
+            {
+                enemy->followPlayer(dt);
+            }
+            else if (enemy->isNearPlayer(6) )
+            {
+                enemy->followPlayer(dt);
+            }
+ 
+            else if (enemy->isNearPlayer(30))
+            {
+                enemy->increaseVelocity(dt);
+                enemy->followPlayer(dt);
+            }
+            
+            
+
+
+
         }
     };
 };
