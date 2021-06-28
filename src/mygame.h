@@ -14,7 +14,8 @@
 #define FLOOR_HEIGHT 0.32
 #define MAX_DISTANCE 8000
 #define ISLE_Y_OFFSET -1
-#define DIST_BTW_ISLES 500
+#define DIST_BTW_ISLES 1000
+#define APROX_ISLE_SIZE 500
 #define ISLE_TYPES 6
 
 //Globals
@@ -183,6 +184,7 @@ public:
     
 
     bool isAboveIsle(Vector3 pos);
+    bool isAboveIsle(Vector3 pos, float padding);
     bool isAboveIsle(EntityMesh* e) { return isAboveIsle(e->getPosition()); };
     static void createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ);
     static void createRandomIsles(int number, int maxDist) { createRandomIsles(number, -maxDist, maxDist, -maxDist, maxDist); };

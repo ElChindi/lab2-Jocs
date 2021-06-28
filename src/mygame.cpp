@@ -23,7 +23,6 @@ std::vector<Isle*> Isle::isles;
 bool GUI::usingMouse = false;
 int GUI::currentButton = 0;
 
-
 //----------------------------------------Scene----------------------------------------//
 Scene::Scene() {
 
@@ -41,7 +40,7 @@ Scene::Scene() {
 	//Initialize Sea
 	sea = Sea(500);
 	sea.mesh = new Mesh();
-	sea.mesh->createPlane(5000);
+	sea.mesh->createPlane(MAX_DISTANCE + 1000);
 	sea.shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture_sea.fs");
 	sea.color = Vector4(1, 1, 1, 0.8);
 	sea.texture = Texture::Get("data/sea.tga");
@@ -396,7 +395,7 @@ Player::Player() {
 	onShip = true;
 
 	ship = new Ship();
-	ship->model.translate(500, 0, -150);
+	//ship->model.translate(500, 0, -150);
 	ship->maxVelocity = 40;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
@@ -521,14 +520,16 @@ Vector3 Isle::getValidPosition() {
 	Vector3 isleCenter = this->getPosition();
 	Vector3 position;
 	while (!validPos) {
-		position = Vector3(random(DIST_BTW_ISLES, isleCenter.x - DIST_BTW_ISLES / 2), 1,
-			random(DIST_BTW_ISLES, isleCenter.z - DIST_BTW_ISLES / 2));
+		position = Vector3(random(APROX_ISLE_SIZE, isleCenter.x - APROX_ISLE_SIZE / 2), 1,
+			random(APROX_ISLE_SIZE, isleCenter.z - APROX_ISLE_SIZE / 2));
 		//supose it is valid
 		validPos = true;
 		//in isle and not colliding
 		Vector3 coll;
 		Vector3 collnorm;
-		if (!isAboveIsle(position) || this->mesh->testSphereCollision(this->model, position + Vector3(0, 1.5, 0), 1.4 / this->scaleFactor, coll, collnorm)) {
+		float padding = 8;
+		if (!isAboveIsle(position, padding) ||
+			this->mesh->testSphereCollision(this->model, position + Vector3(0, 1.5, 0), 1.4 / this->scaleFactor, coll, collnorm)) {
 			validPos = false;
 			continue;
 		}
@@ -541,6 +542,18 @@ bool Isle::isAboveIsle(Vector3 pos) {
 	Vector3 coll;
 	Vector3 collnorm;
 	return mesh->testRayCollision(model, pos, Vector3(0, -1, 0), coll, collnorm,0.1);
+}
+
+bool Isle::isAboveIsle(Vector3 pos, float padding) {
+	return (isAboveIsle(pos) &&
+		isAboveIsle(pos + Vector3(1, 0, 0) * padding) &&
+		isAboveIsle(pos + Vector3(-1, 0, 0) * padding) &&
+		isAboveIsle(pos + Vector3(0, 0, 1) * padding) &&
+		isAboveIsle(pos + Vector3(0, 0, -1) * padding) &&
+		isAboveIsle(pos + Vector3(0.71, 0, 0.71) * padding) &&
+		isAboveIsle(pos + Vector3(-0.71, 0, 0.71) * padding) &&
+		isAboveIsle(pos + Vector3(0.71, 0, -0.71) * padding) &&
+		isAboveIsle(pos + Vector3(-0.71, 0, -0.71) * padding));
 }
 
 void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ) {
@@ -571,7 +584,7 @@ Vector3 Isle::getNewIslePosition(int minX, int maxX, int minZ, int maxZ) {
 		//supose it is valid
 		validPos = true;
 		//it cant be near the center
-		if (position.length() < DIST_BTW_ISLES) {
+		if (position.length() < DIST_BTW_ISLES / 2.0) {
 			validPos = false;
 			continue; //try again
 		}
