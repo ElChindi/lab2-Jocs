@@ -253,6 +253,7 @@ void SeaStage::render() {
 	Scene::world->player->ship->render();//cambiar por renderizar all ships
 
 	Isle::renderAll();
+	//Scene::world->currentIsle->renderStuff();
 
 	//Draw the floor grid
 	//drawGrid();
@@ -317,6 +318,7 @@ void LandStage::render() {
 	Scene::world->player->pirate->render();
 	Isle::renderAll();
 	Scene::world->currentIsle->renderEnemies();
+	Scene::world->currentIsle->renderStuff();
 
 	//Draw the floor grid
 	//drawGrid();
@@ -458,10 +460,37 @@ void Skybox::render() {
 	EntityMesh::render();
 }
 //----------------------------------------Isle----------------------------------------//
+void Isle::createStuff() {
+	std::string theme;
+	switch (this->type) {
+	case 1: theme = "bushes"; break;
+	case 2:
+	case 3: theme = "grass"; break;
+	case 4: theme = "redFlowers"; break;
+	case 5:
+	case 6: theme = "yellowFlowers"; break;
+	default: theme = "grass";
+	}
+
+	int stuffLeft = 200;
+	while (stuffLeft > 0) {
+		Vector3 pos = getValidPosition();
+		EntityMesh* stuff = new EntityMesh();
+		this->noCollisionableThings.push_back(stuff);
+		stuff->model.setIdentity();
+		stuff->scale(75);
+		stuff->model.translateGlobal(pos.x, pos.y, pos.z);
+		char variation = rand() % 2 + 1;
+		stuff->loadMeshAndTexture(("data/decoration/noColli/"+theme+"/"+ std::to_string(variation) +".obj").c_str(), 
+								("data/decoration/noColli/" + theme + "/" + std::to_string(variation) + ".tga").c_str());
+		stuffLeft -= 1;
+	}
+}
+
 void Isle::createEnemies(int n) {
 	int enemiesLeft = n;
 	while (enemiesLeft > 0) {
-		Vector3 pos = getNewEnemyPosition();
+		Vector3 pos = getValidPosition();
 		Humanoid* enemy = new Humanoid();
 		this->enemies.push_back(enemy);
 		enemy->model.setIdentity();
@@ -472,7 +501,7 @@ void Isle::createEnemies(int n) {
 	}
 }
 
-Vector3 Isle::getNewEnemyPosition() {
+Vector3 Isle::getValidPosition() {
 	bool validPos = false;
 	Vector3 isleCenter = this->getPosition();
 	Vector3 position;
@@ -511,6 +540,7 @@ void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ)
 		char type = rand() % ISLE_TYPES + 1;
 		isle->type = type;
 		isle->loadMeshAndTexture(("data/islas/"+std::to_string(type)+".obj").c_str(), ("data/islas/" + std::to_string(type) + ".tga").c_str());
+		isle->createStuff();
 		isle->createEnemies(10);
 		islesLeft -= 1;
 	}
