@@ -407,6 +407,9 @@ Player::Player() {
 	pirate->loadMeshAndTexture("data/models/pirate/pirate.mesh", "data/models/pirate/pineapple-32-32x.tga");
 
 	pirate->currAnimation = pirate->playerAnimations[0];
+
+	pirate->attacking = false;
+	pirate->hp = 10;
 }
 
 void Player::comeAshore()
@@ -601,33 +604,52 @@ Vector3 Isle::getNewIslePosition(int minX, int maxX, int minZ, int maxZ) {
 void Isle::updateEnemies(float dt) {
 	for (Skeli* enemy : enemies) {
 
-
-		if (activeEnemy == NULL && enemy->isNearPlayer(4))
+		//create active enemy
+		if (activeEnemy == NULL && enemy->isNearPlayer(9))
 		{
 			activeEnemy = enemy;
 			enemy->followPlayer(dt);
+			enemy->moving = false;
 		}
+		//get active enemy closer
 		else if (activeEnemy == enemy && enemy->isNearPlayer(4))
 		{
 			enemy->followPlayer(dt);
+			enemy->moving = false;
 		}
+		//allow active enemy go closer
 		else if (activeEnemy == enemy && enemy->isNearPlayer(30))
 		{
 			enemy->increaseVelocity(dt);
 			enemy->followPlayer(dt);
+			enemy->moving = true;
 		}
-		else if (enemy->isNearPlayer(6))
+		//make other enemies wait
+		else if (enemy->isNearPlayer(8))
 		{
 			enemy->followPlayer(dt);
+			enemy->moving = false;
 		}
-
+		//make enemies get closer
 		else if (enemy->isNearPlayer(30))
 		{
 			enemy->increaseVelocity(dt);
 			enemy->followPlayer(dt);
+			enemy->moving = true;
 		}
 
-
+		//Update animations
+		if (enemy->attacking == false) {
+			if (enemy->moving == false) {
+				enemy->currAnimation = enemy->skeliAnimations[0];
+			}
+			else {
+				enemy->currAnimation = enemy->skeliAnimations[1];
+			}
+		}
+		else {
+			enemy->currAnimation = enemy->skeliAnimations[3];
+		}
 
 
 
@@ -798,6 +820,7 @@ bool Skeli::isNearPlayer(int radius) {
 void Humanoid::increaseVelocity(float dt) {
 
 	currentVelocity = clamp(currentVelocity + dt * 10, 0, maxVelocity);
+
 }
 
 void Humanoid::rotate(float dt, eRotation rot) {
