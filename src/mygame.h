@@ -80,6 +80,17 @@ class EntityMesh : public Entity
         };
 };
 
+class Sword : public EntityMesh
+{
+public:
+    Matrix44 handMatrix;
+
+    //Sword();
+
+    void render();
+
+};
+
 class Humanoid : public EntityMesh
 {
 public:
@@ -232,6 +243,7 @@ public:
     Ship* ship;
     bool onShip;
     Humanoid* pirate;
+    Sword* sword;
 
     Player();
     void comeAshore();
