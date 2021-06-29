@@ -90,8 +90,10 @@ public:
     static std::vector<Animation*> skeliAnimations;
     float maxVelocity;
     float currentVelocity;
-    int hp;
     Animation* currAnimation;
+
+    bool attacking;
+    int hp;
 
     Humanoid();
     void movePlayer(float dt);
@@ -127,7 +129,6 @@ class Skeli : public Humanoid
 public:
     bool alive;
     bool moving;
-    bool attacking;
 
 
     Skeli() {
