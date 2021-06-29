@@ -568,7 +568,7 @@ void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ)
 		char type = rand() % ISLE_TYPES + 1;
 		isle->type = type;
 		isle->loadMeshAndTexture(("data/islas/"+std::to_string(type)+".obj").c_str(), ("data/islas/" + std::to_string(type) + ".tga").c_str());
-		isle->createStuff();
+		//isle->createStuff();
 		isle->createEnemies(10);
 		islesLeft -= 1;
 	}
@@ -597,6 +597,42 @@ Vector3 Isle::getNewIslePosition(int minX, int maxX, int minZ, int maxZ) {
 	}
 	return position;
 }
+
+void Isle::updateEnemies(float dt) {
+	for (Skeli* enemy : enemies) {
+
+
+		if (activeEnemy == NULL && enemy->isNearPlayer(4))
+		{
+			activeEnemy = enemy;
+			enemy->followPlayer(dt);
+		}
+		else if (activeEnemy == enemy && enemy->isNearPlayer(4))
+		{
+			enemy->followPlayer(dt);
+		}
+		else if (activeEnemy == enemy && enemy->isNearPlayer(30))
+		{
+			enemy->increaseVelocity(dt);
+			enemy->followPlayer(dt);
+		}
+		else if (enemy->isNearPlayer(6))
+		{
+			enemy->followPlayer(dt);
+		}
+
+		else if (enemy->isNearPlayer(30))
+		{
+			enemy->increaseVelocity(dt);
+			enemy->followPlayer(dt);
+		}
+
+
+
+
+
+	}
+};
 
 //----------------------------------------Ship----------------------------------------//
 void Ship::increaseVelocity(float dt) {
