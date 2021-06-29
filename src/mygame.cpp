@@ -142,6 +142,62 @@ bool GUI::renderButton(int buttonNumber, float x, float y, float w, float h, Tex
 	return focus && pressed;
 }
 
+void GUI::renderHPBar(Humanoid* entity) {
+	Scene::world->playingCam->enable();
+	Vector3 bar_pos = entity->getPosition() + Vector3(0, 4.25, 0);
+	Mesh quad;
+	Vector3 projected_pos = Camera::current->project(bar_pos, Game::instance->window_width, Game::instance->window_height);
+	if (projected_pos.z > 1) return; //as it is projected in the other side of the camera
+	float distToCam = (bar_pos - Camera::current->eye).length(); //use distance to camera
+	if (distToCam == 0) return;
+	quad.createQuad(projected_pos.x, Game::instance->window_height - projected_pos.y, 150*entity->hp/distToCam, 150/distToCam, true);
+	
+	Scene::world->cam2D->enable();
+
+	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	shader->enable();
+	shader->setUniform("u_color", Vector4(1,0,0,0.5));
+	Matrix44 quadModel;
+	shader->setUniform("u_model", quadModel);
+	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
+	shader->setUniform("u_texture", Texture::Get("data/GUI/null.tga"), 0);
+	shader->setUniform("u_eye", Camera::current->eye);
+
+	quad.render(GL_TRIANGLES);
+	shader->disable();
+}
+
+void GUI::renderAllHPBars() {
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	for (Humanoid* enemy : Scene::world->currentIsle->enemies) {
+		renderHPBar(enemy);
+	};
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+}
+
+void GUI::renderActiveEnemyHPBar() {
+	Skeli* enemy = Scene::world->currentIsle->activeEnemy;
+	if (enemy == NULL) return;
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	renderHPBar(enemy);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+}
+
 void GUI::renderGradient() {
 	int xCenter = Game::instance->window_width / 2;
 	int yCenter = Game::instance->window_height / 2;
@@ -161,6 +217,7 @@ void GUI::renderGradient() {
 }
 
 void GUI::renderMainMenu() {
+	Scene::world->cam2D->enable();
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
@@ -236,7 +293,6 @@ void MainMenuStage::render() {
 
 
 	//Render buttons
-	Scene::world->cam2D->enable();
 	GUI::renderMainMenu();
 }
 
@@ -339,6 +395,9 @@ void LandStage::render() {
 
 	//render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
+	
+	//GUI::renderAllHPBars();
+	GUI::renderActiveEnemyHPBar();
 
 	if (Scene::world->isPaused) {
 		Scene::world->cam2D->enable();
@@ -395,7 +454,7 @@ Player::Player() {
 	onShip = true;
 
 	ship = new Ship();
-	//ship->model.translate(500, 0, -150);
+	ship->model.translate(1000, 0, -450);
 	ship->maxVelocity = 40;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
