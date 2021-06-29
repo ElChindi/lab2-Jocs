@@ -18,6 +18,9 @@
 #define APROX_ISLE_SIZE 500
 #define ISLE_TYPES 6
 
+#define MAX_PLAYER_HP 20
+#define MAX_SKELI_HP 3
+
 //Globals
 
 //Enums
@@ -139,12 +142,11 @@ public:
     bool moving;
 
 
-
     Skeli() {
         alive = true;
         moving = false;
         attacking = false;
-        hp = 3;
+        hp = MAX_SKELI_HP;
     }
     void followPlayer(float dt);
     bool isNearPlayer(int radius);
@@ -220,6 +222,9 @@ public:
 
     void renderStuff() {
         for (EntityMesh* stuff : noCollisionableThings) {
+            stuff->render();
+        }
+        for (EntityMesh* stuff : collisionableThings) {
             stuff->render();
         }
     };
@@ -451,6 +456,9 @@ public:
     static const int nPauseButtons = 3;
     static void navigateMenu(int nButtons);
     static bool renderButton(int buttonNumber, float x, float y, float w, float h, Texture* tex, bool flipuvs);
+    static void renderHPBar(Humanoid* entity);
+    static void renderAllHPBars();
+    static void renderActiveEnemyHPBar();
     static void renderGradient();
     static void renderMainMenu();
     static void renderPauseMenu();

@@ -148,6 +148,62 @@ bool GUI::renderButton(int buttonNumber, float x, float y, float w, float h, Tex
 	return focus && pressed;
 }
 
+void GUI::renderHPBar(Humanoid* entity) {
+	Scene::world->playingCam->enable();
+	Vector3 bar_pos = entity->getPosition() + Vector3(0, 4.25, 0);
+	Mesh quad;
+	Vector3 projected_pos = Camera::current->project(bar_pos, Game::instance->window_width, Game::instance->window_height);
+	if (projected_pos.z > 1) return; //as it is projected in the other side of the camera
+	float distToCam = (bar_pos - Camera::current->eye).length(); //use distance to camera
+	if (distToCam == 0) return;
+	quad.createQuad(projected_pos.x, Game::instance->window_height - projected_pos.y, 150*entity->hp/distToCam, 150/distToCam, true);
+	
+	Scene::world->cam2D->enable();
+
+	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	shader->enable();
+	shader->setUniform("u_color", Vector4(1,0,0,0.5));
+	Matrix44 quadModel;
+	shader->setUniform("u_model", quadModel);
+	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
+	shader->setUniform("u_texture", Texture::Get("data/GUI/null.tga"), 0);
+	shader->setUniform("u_eye", Camera::current->eye);
+
+	quad.render(GL_TRIANGLES);
+	shader->disable();
+}
+
+void GUI::renderAllHPBars() {
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	for (Humanoid* enemy : Scene::world->currentIsle->enemies) {
+		renderHPBar(enemy);
+	};
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+}
+
+void GUI::renderActiveEnemyHPBar() {
+	Skeli* enemy = Scene::world->currentIsle->activeEnemy;
+	if (enemy == NULL) return;
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	renderHPBar(enemy);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+}
+
 void GUI::renderGradient() {
 	int xCenter = Game::instance->window_width / 2;
 	int yCenter = Game::instance->window_height / 2;
@@ -167,6 +223,7 @@ void GUI::renderGradient() {
 }
 
 void GUI::renderMainMenu() {
+	Scene::world->cam2D->enable();
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
@@ -242,7 +299,6 @@ void MainMenuStage::render() {
 
 
 	//Render buttons
-	Scene::world->cam2D->enable();
 	GUI::renderMainMenu();
 }
 
@@ -346,6 +402,9 @@ void LandStage::render() {
 
 	//render the FPS, Draw Calls, etc
 	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
+	
+	//GUI::renderAllHPBars();
+	GUI::renderActiveEnemyHPBar();
 
 	if (Scene::world->isPaused) {
 		Scene::world->cam2D->enable();
@@ -406,7 +465,7 @@ Player::Player() {
 	onShip = true;
 
 	ship = new Ship();
-	//ship->model.translate(500, 0, -150);
+	ship->model.translate(1000, 0, -450);
 	ship->maxVelocity = 40;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
@@ -490,13 +549,14 @@ void Skybox::render() {
 //----------------------------------------Isle----------------------------------------//
 void Isle::createStuff() {
 	std::string theme;
+	bool palms = true;
 	switch (this->type) {
-	case 1: theme = "bushes"; break;
-	case 2:
+	case 1: theme = "bushes"; palms = false; break;
+	case 2: theme = "grass"; break;
 	case 3: theme = "grass"; break;
-	case 4: theme = "redFlowers"; break;
-	case 5:
-	case 6: theme = "yellowFlowers"; break;
+	case 4: theme = "redFlowers"; palms = false; break;
+	case 5: theme = "yellowFlowers"; break;
+	case 6: theme = "yellowFlowers"; palms = false; break;
 	default: theme = "grass";
 	}
 
@@ -507,12 +567,30 @@ void Isle::createStuff() {
 		this->noCollisionableThings.push_back(stuff);
 		stuff->model.setIdentity();
 		stuff->scale(75);
+		stuff->model.rotate(random(6.28), Vector3(0, 1, 0));
 		stuff->model.translateGlobal(pos.x, pos.y, pos.z);
 		char variation = rand() % 2 + 1;
-		stuff->loadMeshAndTexture(("data/decoration/noColli/"+theme+"/"+ std::to_string(variation) +".obj").c_str(), 
+		stuff->loadMeshAndTexture(("data/decoration/noColli/" + theme + "/" + std::to_string(variation) + ".obj").c_str(), 
 								("data/decoration/noColli/" + theme + "/" + std::to_string(variation) + ".tga").c_str());
 		stuffLeft -= 1;
 	}
+
+	if (!palms) return;
+	stuffLeft = 20;
+	while (stuffLeft > 0) {
+		Vector3 pos = getValidPosition();
+		EntityMesh* stuff = new EntityMesh();
+		this->collisionableThings.push_back(stuff);
+		stuff->model.setIdentity();
+		stuff->scale(75);
+		stuff->model.rotate(random(6.28), Vector3(0, 1, 0));
+		stuff->model.translateGlobal(pos.x, pos.y, pos.z);
+		char variation = rand() % 2 + 1;
+		stuff->loadMeshAndTexture(("data/decoration/colli/palm/" + std::to_string(variation) + ".obj").c_str(),
+								("data/decoration/colli/palm/" + std::to_string(variation) + ".tga").c_str());
+		stuffLeft -= 1;
+	}
+
 }
 
 void Isle::createEnemies(int n) {
@@ -736,83 +814,85 @@ Humanoid::Humanoid() {
 
 
 void Humanoid::movePlayer(float dt) {
-	if (currentVelocity > 0) {
-		Vector3 dir = Vector3();
-		if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_A))) {
-			/*model.translate(0, 0, -dt * currentVelocity * 0.6);
-			model.translate(-dt * currentVelocity * 0.6, 0, 0);*/
-			dir = Vector3(-0.6, 0, -0.6);
-			currAnimation = playerAnimations[1];
-		}
-		else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_A))) {
-			/*model.translate(0, 0, dt * currentVelocity * 0.3);
-			model.translate(-dt * currentVelocity * 0.3, 0, 0);*/
-			dir = Vector3(-0.3, 0, 0.3);
-			currAnimation = playerAnimations[2];
-		}
-		else if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_D))) {
-			/*model.translate(0, 0, -dt * currentVelocity * 0.6);
-			model.translate(dt * currentVelocity * 0.6, 0, 0);*/
-			dir = Vector3(0.6, 0, -0.6);
-			currAnimation = playerAnimations[1];
-		}
-		else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_D))) {
-			/*model.translate(0, 0, dt * currentVelocity * 0.3);
-			model.translate(dt * currentVelocity * 0.3, 0, 0);*/
-			dir = Vector3(0.3, 0, 0.3);
-			currAnimation = playerAnimations[2];
-		}
-		else if(Input::gamepads[0].direction & PAD_UP || (Input::isKeyPressed(SDL_SCANCODE_W))){
-			//model.translate(0, 0, -dt * currentVelocity); 
-			dir = Vector3(0, 0, -1);
-			currAnimation = playerAnimations[1];
-		}
-		else if (Input::gamepads[0].direction & PAD_DOWN || (Input::isKeyPressed(SDL_SCANCODE_S))) {
-			//model.translate(0, 0, dt * currentVelocity * 0.5);
-			dir = Vector3(0, 0, 0.5);
-			currAnimation = playerAnimations[2];
-		}
-		else if (Input::gamepads[0].direction & PAD_LEFT || (Input::isKeyPressed(SDL_SCANCODE_A))) {
-			//model.translate(-dt * currentVelocity * 0.75, 0, 0);
-			dir = Vector3(-0.75, 0, 0);
-			currAnimation = playerAnimations[2];
-		}
-		else if (Input::gamepads[0].direction & PAD_RIGHT || (Input::isKeyPressed(SDL_SCANCODE_D))) {
-			//model.translate(dt * currentVelocity * 0.75, 0, 0);
-			dir = Vector3(0.75, 0, 0);
-			currAnimation = playerAnimations[2];
-		}
-		else {
-			currAnimation = playerAnimations[0];
-		}
+	if (currentVelocity == 0) return;
+	Vector3 dir = Vector3();
+	if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_A))) {
+		/*model.translate(0, 0, -dt * currentVelocity * 0.6);
+		model.translate(-dt * currentVelocity * 0.6, 0, 0);*/
+		dir = Vector3(-0.6, 0, -0.6);
+		currAnimation = playerAnimations[1];
+	}
+	else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_A))) {
+		/*model.translate(0, 0, dt * currentVelocity * 0.3);
+		model.translate(-dt * currentVelocity * 0.3, 0, 0);*/
+		dir = Vector3(-0.3, 0, 0.3);
+		currAnimation = playerAnimations[2];
+	}
+	else if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_D))) {
+		/*model.translate(0, 0, -dt * currentVelocity * 0.6);
+		model.translate(dt * currentVelocity * 0.6, 0, 0);*/
+		dir = Vector3(0.6, 0, -0.6);
+		currAnimation = playerAnimations[1];
+	}
+	else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_D))) {
+		/*model.translate(0, 0, dt * currentVelocity * 0.3);
+		model.translate(dt * currentVelocity * 0.3, 0, 0);*/
+		dir = Vector3(0.3, 0, 0.3);
+		currAnimation = playerAnimations[2];
+	}
+	else if(Input::gamepads[0].direction & PAD_UP || (Input::isKeyPressed(SDL_SCANCODE_W))){
+		//model.translate(0, 0, -dt * currentVelocity); 
+		dir = Vector3(0, 0, -1);
+		currAnimation = playerAnimations[1];
+	}
+	else if (Input::gamepads[0].direction & PAD_DOWN || (Input::isKeyPressed(SDL_SCANCODE_S))) {
+		//model.translate(0, 0, dt * currentVelocity * 0.5);
+		dir = Vector3(0, 0, 0.5);
+		currAnimation = playerAnimations[2];
+	}
+	else if (Input::gamepads[0].direction & PAD_LEFT || (Input::isKeyPressed(SDL_SCANCODE_A))) {
+		//model.translate(-dt * currentVelocity * 0.75, 0, 0);
+		dir = Vector3(-0.75, 0, 0);
+		currAnimation = playerAnimations[2];
+	}
+	else if (Input::gamepads[0].direction & PAD_RIGHT || (Input::isKeyPressed(SDL_SCANCODE_D))) {
+		//model.translate(dt * currentVelocity * 0.75, 0, 0);
+		dir = Vector3(0.75, 0, 0);
+		currAnimation = playerAnimations[2];
+	}
+	else {
+		currAnimation = playerAnimations[0];
+	}
 
 		
-		model.translate(dt * currentVelocity * dir.x, 0, dt * currentVelocity * dir.z);
+	model.translate(dt * currentVelocity * dir.x, 0, dt * currentVelocity * dir.z);
 
-		currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
-		Isle* isle = Scene::world->currentIsle;
-		Vector3 targetCenter = model.getTranslation() + Vector3(0, 1.5, 0);
-		Vector3 coll;
-		Vector3 collnorm;
+	currentVelocity = clamp(currentVelocity - dt * 5, 0, maxVelocity);
+	Isle* isle = Scene::world->currentIsle;
+	Vector3 targetCenter = model.getTranslation() + Vector3(0, 1.5, 0);
+	Vector3 coll;
+	Vector3 collnorm;
 
-		//Check if in the isle
-		if (!isle->isAboveIsle(this) && isle->mesh->testSphereCollision(isle->model, targetCenter, 2 / isle->scaleFactor, coll, collnorm)) {
-			//std::cout << "Out" << std::endl;
-			Vector3 push_in = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
-			model.translateGlobal(push_in.x, 0, push_in.z);
-		}
-			//model.translate(-dt * currentVelocity * dir.x, 0, -dt * currentVelocity * dir.z); 
+	//Check if in the isle
+	if (!isle->isAboveIsle(this) && isle->mesh->testSphereCollision(isle->model, targetCenter, 2 / isle->scaleFactor, coll, collnorm)) {
+		//std::cout << "Out" << std::endl;
+		Vector3 push_in = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
+		model.translateGlobal(push_in.x, 0, push_in.z);
+	}
+		//model.translate(-dt * currentVelocity * dir.x, 0, -dt * currentVelocity * dir.z); 
 
-		//Check collisions
-		if (!isle->mesh->testSphereCollision(isle->model, targetCenter, 1.4/isle->scaleFactor, coll, collnorm))
-			return;
-
-		//if (currentVelocity > 5)
-		//	currentVelocity = clamp(currentVelocity - dt * 100, 5, maxVelocity);
+	//Check collisions with isle
+	if (isle->mesh->testSphereCollision(isle->model, targetCenter, 1.4 / isle->scaleFactor, coll, collnorm)) {
 		Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
 		model.translateGlobal(-push_away.x, 0, -push_away.z);
 	}
-
+	//Check collisino with palms
+	for (EntityMesh* palm : isle->collisionableThings) {
+		if (palm->mesh->testSphereCollision(palm->model, targetCenter, 1.4 / palm->scaleFactor, coll, collnorm)) {
+			Vector3 push_away = normalize(Vector3(coll.x - targetCenter.x, 0.001, coll.z - targetCenter.z)) * dt * currentVelocity * scaleFactor;
+			model.translateGlobal(-push_away.x, 0, -push_away.z);
+		}
+	}
 }
 
 void Skeli::followPlayer(float dt) {
