@@ -213,6 +213,9 @@ public:
         for (EntityMesh* stuff : noCollisionableThings) {
             stuff->render();
         }
+        for (EntityMesh* stuff : collisionableThings) {
+            stuff->render();
+        }
     };
 
     void renderEnemies() {
