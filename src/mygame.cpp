@@ -41,7 +41,17 @@ Scene::Scene() {
 
 	//create isles
 	Isle::createRandomIsles(100, MAX_DISTANCE);
-	currentIsle = NULL; //change if we start in an isle
+	
+	//Starting isle
+	Isle* startingIsle = new Isle();
+	startingIsle->model.setIdentity();
+	startingIsle->scale(30);
+	startingIsle->model.translateGlobal(0, ISLE_Y_OFFSET, 0);
+	startingIsle->loadMeshAndTexture("data/islas/start.obj", "data/islas/start.tga");
+	startingIsle->type = 5;
+	startingIsle->createStuff();
+
+	currentIsle = startingIsle;
 	
 	//Initialize Sea
 	sea = Sea(500);
@@ -60,7 +70,7 @@ Scene::Scene() {
 	staticCam->setPerspective(70.f, Game::instance->window_width / (float)Game::instance->window_height, 0.1f, 10000.f);
 
 	playingCam = new Camera();
-	playingCam->lookAt(Vector3(0.f, 100.f, 100.f), Vector3(0.f, 0.f, 0.f), Vector3(0.f, 1.f, 0.f));
+	playingCam->lookAt(Vector3(-200.f, 50.f, 0.f), Vector3(0.f, 0.f, 0.f), Vector3(0.f, 1.f, 0.f));
 	playingCam->setPerspective(70.f, Game::instance->window_width / (float)Game::instance->window_height, 0.1f, 10000.f);
 
 	cam2D = new Camera();
@@ -256,9 +266,9 @@ void GUI::renderMainMenu() {
 	renderGradient();
 
 	if (renderButton(0, xCenter - 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/startGame.tga"), true)) {
-		Game::instance->current_stage = 1;
+		Game::instance->current_stage = 2;
 		AudioManager::audio->stop(Scene::world->currentMusic);
-		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Onepiece.wav");
+		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav");
 	}
 	renderButton(1, xCenter - 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
 	if (renderButton(2, xCenter - 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/exit.tga"), true)) {
@@ -488,22 +498,24 @@ Player::Player() {
 	onShip = true;
 
 	ship = new Ship();
-	ship->model.translate(1000, 0, -450);
+	ship->model.translate(126, 0, -12);
+	ship->model.rotate(2.1, Vector3(0, 1, 0));
 	ship->maxVelocity = 40;
 	ship->scale(2);
 	ship->loadMeshAndTexture("data/ship_light_cannon.obj", "data/ship_light_cannon.tga");
 
 
 	pirate = new Humanoid();
-	pirate->hp = MAX_PLAYER_HP;
-	pirate->maxVelocity = 4;
+	pirate->maxVelocity = 5;
+	pirate->model.setTranslation(-100, FLOOR_HEIGHT * 3, -20);
+	pirate->model.rotate(1.5, Vector3(0, 1, 0));
 	pirate->scale(2);
 	pirate->loadMeshAndTexture("data/models/pirate/pirate.mesh", "data/models/pirate/pineapple-32-32x.tga");
 
 	pirate->currAnimation = pirate->playerAnimations[0];
 
 	pirate->attacking = false;
-	pirate->hp = 10;
+	pirate->hp = MAX_PLAYER_HP;
 }
 
 void Player::comeAshore()
@@ -515,8 +527,12 @@ void Player::comeAshore()
 		//spawnPosition = ship->model.getTranslation(); //DEBUG
 		if (getPlayerSpawn(spawnPosition)) //if doesn't find anything
 		{
-			//float scale = pirate->model._11;
+			Vector3 isleCenter = Scene::world->currentIsle->getPosition();
+			Vector3 dir = Vector3(spawnPosition.x - isleCenter.x, 0, spawnPosition.z - isleCenter.z);
+			if (dir.x == 0 && dir.z == 0) return;
 			pirate->model.setTranslation(spawnPosition.x, spawnPosition.y, spawnPosition.z);
+			pirate->model.setFrontAndOrthonormalize(dir);
+			pirate->model.setUpAndOrthonormalize(Vector3(0, 1, 0));
 			pirate->scale(pirate->scaleFactor);
 			Game::instance->current_stage = 2;
 			AudioManager::audio->stop(Scene::world->currentMusic);
@@ -657,7 +673,7 @@ Vector3 Isle::getValidPosition() {
 bool Isle::isAboveIsle(Vector3 pos) {
 	Vector3 coll;
 	Vector3 collnorm;
-	return mesh->testRayCollision(model, pos, Vector3(0, -1, 0), coll, collnorm,0.1);
+	return mesh->testRayCollision(model, pos, Vector3(0, -1, 0), coll, collnorm,0.5);
 }
 
 bool Isle::isAboveIsle(Vector3 pos, float padding) {

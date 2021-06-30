@@ -18,7 +18,7 @@
 #define APROX_ISLE_SIZE 500
 #define ISLE_TYPES 6
 
-#define MAX_PLAYER_HP 20
+#define MAX_PLAYER_HP 10
 #define MAX_SKELI_HP 3
 
 //Globals
