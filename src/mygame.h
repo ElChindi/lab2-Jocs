@@ -105,6 +105,7 @@ public:
     float anim_time;
     bool attacking;
     bool dodging;
+    bool hasHitSomeone;
     int hp;
 
     Humanoid();
@@ -155,6 +156,7 @@ public:
 
     void initiateAttack();
     void attack(float dt);
+    bool hitPlayer();
 };
 
 class Ship : public EntityMesh
@@ -251,7 +253,6 @@ class Player
 {
 public:
     Ship* ship;
-    bool onShip;
     Humanoid* pirate;
     Sword* sword;
 
@@ -264,6 +265,7 @@ public:
     bool getPlayerSpawn(Vector3& spawnPos); // Finds a place where the player can spawn in the isle
     void initiateAttack();
     void attack(float dt);
+    bool hitEnemy();
     void initiateDodge();
     void dodge(float dt);
 };
@@ -470,7 +472,7 @@ public:
     static const int nPauseButtons = 3;
     static void navigateMenu(int nButtons);
     static bool renderButton(int buttonNumber, float x, float y, float w, float h, Texture* tex, bool flipuvs);
-    static void renderHPBar(float x, float y, float w, float h, Vector4 color);
+    static void renderBar(float x, float y, float w, float h, Vector4 color);
     static void renderSkeliHPBar(Skeli* enemy);
     static void renderPlayerHPBar();
     static void renderAllHPBars();

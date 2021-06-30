@@ -50,6 +50,7 @@ Scene::Scene() {
 	startingIsle->loadMeshAndTexture("data/islas/start.obj", "data/islas/start.tga");
 	startingIsle->type = 5;
 	startingIsle->createStuff();
+	startingIsle->createEnemies(10);
 
 	currentIsle = startingIsle;
 	
@@ -160,7 +161,7 @@ bool GUI::renderButton(int buttonNumber, float x, float y, float w, float h, Tex
 	return focus && pressed;
 }
 
-void GUI::renderHPBar(float x, float y, float w, float h, Vector4 color) {
+void GUI::renderBar(float x, float y, float w, float h, Vector4 color) {
 	Mesh quad;
 	quad.createQuad(x, y, w, h, true);
 	
@@ -180,12 +181,13 @@ void GUI::renderHPBar(float x, float y, float w, float h, Vector4 color) {
 }
 
 void GUI::renderSkeliHPBar(Skeli* enemy) {
+	if (enemy->hp <= 0) return;
 	Vector3 bar_pos = enemy->getPosition() + Vector3(0, 4.25, 0);
 	Vector3 projected_pos = Camera::current->project(bar_pos, Game::instance->window_width, Game::instance->window_height);
 	if (projected_pos.z > 1) return; //as it is projected in the other side of the camera
 	float distToCam = (bar_pos - Camera::current->eye).length(); //use distance to camera
 	if (distToCam == 0) return;
-	renderHPBar(projected_pos.x, Game::instance->window_height - projected_pos.y, 150 * enemy->hp / distToCam, 150 / distToCam, Vector4(1, 0, 0, 0.5));
+	renderBar(projected_pos.x, Game::instance->window_height - projected_pos.y, 150 * enemy->hp / distToCam, 150 / distToCam, Vector4(1, 0, 0, 0.5));
 }
 
 void GUI::renderPlayerHPBar() {
@@ -197,7 +199,7 @@ void GUI::renderPlayerHPBar() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	int size = 20;
-	renderHPBar(50 + size * hp / 2.0, Game::instance->window_height - size, size * hp, size, Vector4(1, 0, 0, 0.5));
+	renderBar(50 + size * hp / 2.0, Game::instance->window_height - size, size * hp, size, Vector4(1, 0, 0, 0.5));
 	drawText(15, Game::instance->window_height - size*1.5 + 2, "HP", Vector3(1, 0, 0), 2);
 	
 	glEnable(GL_DEPTH_TEST);
@@ -222,7 +224,7 @@ void GUI::renderAllHPBars() {
 
 void GUI::renderActiveEnemyHPBar() {
 	Skeli* enemy = Scene::world->currentIsle->activeEnemy;
-	if (enemy == NULL) return;
+	if (enemy == NULL || enemy->hp <= 0) return;
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
@@ -306,7 +308,7 @@ void GUI::renderEnemiesLeftBar() {
 	}
 	
 	int size = 20;
-	renderHPBar(590 + size * nEnemiesLeft / 2.0, Game::instance->window_height - size, size * nEnemiesLeft, size, Vector4(0, 0, 1, 0.5));
+	renderBar(590 + size * nEnemiesLeft / 2.0, Game::instance->window_height - size, size * nEnemiesLeft, size, Vector4(0, 0, 1, 0.5));
 	drawText(510, Game::instance->window_height - size * 1.5 + 2, "SKELIS", Vector3(0, 0, 1), 2);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -543,7 +545,7 @@ void LandStage::update(double dt) {
 		if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::gamepads[0].direction & PAD_LEFT) Scene::world->player->pirate->increaseVelocity(dt);
 		if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::gamepads[0].direction & PAD_RIGHT) Scene::world->player->pirate->increaseVelocity(dt);*/
 		if (Input::wasKeyPressed(SDL_SCANCODE_E) || Input::gamepads[0].wasButtonPressed(Y_BUTTON)) Scene::world->player->comeAboard();
-		if (Input::wasKeyPressed(SDL_SCANCODE_KP_SPACE) || Input::gamepads[0].wasButtonPressed(X_BUTTON)) Scene::world->player->initiateAttack();
+		if (Input::wasKeyPressed(SDL_SCANCODE_SPACE) || Input::gamepads[0].wasButtonPressed(X_BUTTON)) Scene::world->player->initiateAttack();
 		if (Input::wasKeyPressed(SDL_SCANCODE_Q) || Input::gamepads[0].wasButtonPressed(B_BUTTON)) Scene::world->player->initiateDodge();
 	}
 
@@ -580,7 +582,6 @@ void LandStage::update(double dt) {
 }
 //----------------------------------------Player----------------------------------------//
 Player::Player() {
-	onShip = false;
 	points = 0;
 
 	ship = new Ship();
@@ -682,6 +683,7 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 	return false;//null?
 }
 void Player::initiateAttack() {
+	pirate->hasHitSomeone = false;
 	pirate->attacking = true;
 	pirate->anim_time = 0;
 	pirate->currAnimation = pirate->playerAnimations[3];
@@ -694,7 +696,25 @@ void Player::attack(float dt) {
 			pirate->attacking = false;
 			pirate->currAnimation = pirate->playerAnimations[0]; 
 		}
+		if (!pirate->hasHitSomeone && pirate->anim_time > 0.7 && pirate->anim_time < 0.8 && hitEnemy()) {
+			pirate->hasHitSomeone = true;
+		}
 	}
+}
+
+bool Player::hitEnemy() {
+	for (Humanoid* enemy : Scene::world->currentIsle->enemies) {
+		Vector3 hitCenter = pirate->model * Vector3(0, 0, -1) + Vector3(0, 1.5, 0);
+		Vector3 coll;
+		Vector3 collnorm;
+
+		if (!enemy->mesh->testSphereCollision(enemy->model, hitCenter, 2 / enemy->scaleFactor, coll, collnorm)) continue;
+
+		enemy->hp -= 1;
+
+		return true;
+	}
+	return false;
 }
 
 void Player::initiateDodge() {
@@ -1141,6 +1161,7 @@ bool Skeli::isNearPlayer(int radius) {
 }
 
 void Skeli::initiateAttack() {
+	hasHitSomeone = false;
 	attacking = true;
 	anim_time = 0;
 	currAnimation = skeliAnimations[2];
@@ -1153,16 +1174,26 @@ void Skeli::attack(float dt) {
 			attacking = false;
 			currAnimation = skeliAnimations[0];
 		}
-		//if (0.3 > anim_time > 0.8 && !bolita->allreadyHitPlayer) {
-		//	Bolitahit() {
-		//		is player dodging?
-		//	}
-		//}
 
+		if (!hasHitSomeone && anim_time > 0.9 && anim_time < 1 && hitPlayer()) {
+			hasHitSomeone = true;
+		}
 	}
 }
 
+bool Skeli::hitPlayer() {
+	Humanoid* player = Scene::world->player->pirate;
+	if (player->dodging) return false;
+	Vector3 hitCenter = model * Vector3(0, 0, -1) + Vector3(0, 1.5, 0);
+	Vector3 coll;
+	Vector3 collnorm;
 
+	if (!player->mesh->testSphereCollision(player->model, hitCenter, 2 / player->scaleFactor, coll, collnorm)) return false;
+
+	player->hp -= 1;
+
+	return true;
+}
 
 
 
