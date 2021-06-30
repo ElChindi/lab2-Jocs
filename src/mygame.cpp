@@ -51,7 +51,6 @@ Scene::Scene() {
 	startingIsle->loadMeshAndTexture("data/islas/start.obj", "data/islas/start.tga");
 	startingIsle->type = 5;
 	startingIsle->createStuff();
-	startingIsle->createEnemies(10);
 
 	currentIsle = startingIsle;
 	
@@ -707,13 +706,15 @@ void Player::attack(float dt) {
 }
 
 bool Player::hitEnemy() {
-	for (Humanoid* enemy : Scene::world->currentIsle->enemies) {
+	for (Skeli* enemy : Scene::world->currentIsle->enemies) {
+		if (!enemy->alive) continue;
 		Vector3 hitCenter = pirate->model * Vector3(0, 0, -1) + Vector3(0, 1.5, 0);
 		Vector3 coll;
 		Vector3 collnorm;
 
 		if (!enemy->mesh->testSphereCollision(enemy->model, hitCenter, 2 / enemy->scaleFactor, coll, collnorm)) continue;
 
+		Scene::world->currentIsle->activeEnemy = enemy;
 		enemy->hp -= 1;
 		int r = rand() % 2;
 
@@ -880,7 +881,7 @@ void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ)
 		isle->type = type;
 		isle->loadMeshAndTexture(("data/islas/"+std::to_string(type)+".obj").c_str(), ("data/islas/" + std::to_string(type) + ".tga").c_str());
 		isle->createStuff();
-		isle->createEnemies(10);
+		isle->createEnemies(5);
 		isle->enemiesLeft = true;
 		islesLeft -= 1;
 	}
@@ -959,7 +960,7 @@ void Isle::updateEnemies(float dt) {
 			else {
 				enemy->moving = false;
 				if (activeEnemy == enemy) {
-					activeEnemy == NULL;
+					activeEnemy = NULL;
 				}
 			}
 		}
