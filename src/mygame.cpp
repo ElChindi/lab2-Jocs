@@ -43,7 +43,7 @@ Scene::Scene() {
 	Isle::createRandomIsles(100, MAX_DISTANCE);
 	
 	//Starting isle
-	Isle* startingIsle = new Isle();
+	startingIsle = new Isle();
 	startingIsle->model.setIdentity();
 	startingIsle->scale(30);
 	startingIsle->model.translateGlobal(0, ISLE_Y_OFFSET, 0);
@@ -268,7 +268,7 @@ void GUI::renderMainMenu() {
 	if (renderButton(0, xCenter - 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/startGame.tga"), true)) {
 		Game::instance->current_stage = 2;
 		AudioManager::audio->stop(Scene::world->currentMusic);
-		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav");
+		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav"); // change for main isle music
 	}
 	renderButton(1, xCenter - 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
 	if (renderButton(2, xCenter - 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/exit.tga"), true)) {
@@ -300,6 +300,8 @@ void GUI::renderPauseMenu() {
 		Game::instance->current_stage = 0;
 		GUI::usingMouse = true;
 		GUI::currentButton = 0;
+		AudioManager::audio->stop(Scene::world->currentMusic);
+		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Island.wav");
 	}
 
 	glEnable(GL_DEPTH_TEST);
@@ -504,10 +506,10 @@ void LandStage::update(double dt) {
 }
 //----------------------------------------Player----------------------------------------//
 Player::Player() {
-	onShip = true;
+	onShip = false;
 
 	ship = new Ship();
-	ship->model.translate(126, 0, -12);
+	ship->model.setTranslation(126, 0, -12);
 	ship->model.rotate(2.1, Vector3(0, 1, 0));
 	ship->maxVelocity = 40;
 	ship->scale(2);
@@ -544,8 +546,12 @@ void Player::comeAshore()
 			pirate->model.setUpAndOrthonormalize(Vector3(0, 1, 0));
 			pirate->scale(pirate->scaleFactor);
 			Game::instance->current_stage = 2;
+
 			AudioManager::audio->stop(Scene::world->currentMusic);
-			Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav");
+			if(Scene::world->currentIsle == Scene::world->startingIsle)
+				Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav"); //change for main isle music
+			else
+				Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav");
 		};
 	}
 };
@@ -562,6 +568,23 @@ void Player::comeAboard()
 	}
 };
 
+void Player::respawnPlayer() {
+	if (pirate->hp > 0) return;
+	ship->model.setTranslation(126, 0, -12);
+	ship->model.rotate(2.1, Vector3(0, 1, 0));
+	ship->scale(ship->scaleFactor);
+
+
+	pirate->model.setTranslation(-100, FLOOR_HEIGHT * 3, -20);
+	pirate->model.rotate(1.5, Vector3(0, 1, 0));
+	pirate->scale(pirate->scaleFactor);
+
+	pirate->hp = MAX_PLAYER_HP;
+
+	Scene::world->currentIsle = Scene::world->startingIsle;
+	AudioManager::audio->stop(Scene::world->currentMusic);
+	Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav"); // change for main isle music
+}
 
 bool Player::getPlayerSpawn(Vector3& spawnPos) {
 	Vector3 shipPos = ship->model.getTranslation() + Vector3(0,1,0);

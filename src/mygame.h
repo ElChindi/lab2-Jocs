@@ -255,6 +255,7 @@ public:
     Player();
     void comeAshore();
     void comeAboard();
+    void respawnPlayer();
     bool getPlayerSpawn(Vector3& spawnPos); // Finds a place where the player can spawn in the isle
     void initiateAttack();
     void attack(float dt);
@@ -328,6 +329,8 @@ public:
     Sea bgSea;
     Isle* bgIsle;
     Ship* bgShip;
+
+    Isle* startingIsle;
 
     bool isPaused;
 
