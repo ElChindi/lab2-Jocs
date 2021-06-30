@@ -365,13 +365,7 @@ public:
 
 
 
-    AudioManager() {
-        //Inicializamos BASS al arrancar el juego (id_del_device, muestras por segundo, ...)
-        if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
-        {
-            //error abriendo la tarjeta de sonido...
-        }
-    };
+    AudioManager();
 
     static AudioManager* getInstance() {
         if (!audio) {
@@ -380,106 +374,12 @@ public:
         return audio;
     }
 
-    HSAMPLE play(const char* filename) {
+    HSAMPLE play(const char* filename);
+    HSAMPLE playloop(const char* filename);
 
-        assert(filename);
+    void stop(HSAMPLE hSample);
 
-        if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
-        {
-            //error abriendo la tarjeta de sonido...
-        }
-
-        //El handler para un sample
-        HSAMPLE hSample = NULL;
-        //El handler para un canal
-        HCHANNEL hSampleChannel = NULL;
-
-        //check if loaded
-        std::map<std::string, HSAMPLE*>::iterator it = sSamplesLoaded.find(filename);
-        if (it != sSamplesLoaded.end())
-        {
-            hSampleChannel = BASS_SampleGetChannel(*it->second, false);
-            BASS_ChannelPlay(hSampleChannel, true);
-            return *it->second;
-        }
-        else
-        {
-            //load it
-
-            HSAMPLE hSample = BASS_SampleLoad(false, filename, 0, 0, 20, 0);
-
-            
-            hSampleChannel = BASS_SampleGetChannel(hSample, false);
-            sSamplesLoaded[filename] = &hSample;
-            BASS_ChannelPlay(hSampleChannel, true);
-
-            return hSample;
-        };
-    }
-    HSAMPLE playloop(const char* filename) {
-        assert(filename);
-
-        if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
-        {
-            //error abriendo la tarjeta de sonido...
-        }
-
-        //El handler para un sample
-        HSAMPLE hSample = NULL;
-        //El handler para un canal
-        HCHANNEL hSampleChannel = NULL;
-
-        //check if loaded
-        std::map<std::string, HSAMPLE*>::iterator it = sSamplesLoaded.find(filename);
-        if (it != sSamplesLoaded.end())
-        {
-            hSampleChannel = BASS_SampleGetChannel(*it->second, false);
-            BASS_ChannelPlay(hSampleChannel, true);
-            return *it->second;
-        }
-        else
-        {
-            //load it
-
-            HSAMPLE hSample = BASS_SampleLoad(false, filename, 0, 0, 20, BASS_SAMPLE_LOOP);
-
-
-            hSampleChannel = BASS_SampleGetChannel(hSample, false);
-            sSamplesLoaded[filename] = &hSample;
-            BASS_ChannelPlay(hSampleChannel, true);
-
-            return hSample;
-        };
-        
-    }
-
-    void stop(HSAMPLE hSample) {
-        HCHANNEL hSampleChannel = BASS_SampleGetChannel(hSample, false);
-        BASS_ChannelPause(hSampleChannel);
-    }
-
-    void loadSamples() {
-        HSAMPLE hSample;
-        hSample = BASS_SampleLoad(false, "data/music/Battle.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
-        sSamplesLoaded["data/music/Battle.wav"] = &hSample;
-        hSample = BASS_SampleLoad(false, "data/music/Island.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
-        sSamplesLoaded["data/music/Island.wav"] = &hSample;
-        hSample = BASS_SampleLoad(false, "data/music/Onepiece.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
-        sSamplesLoaded["data/music/Onepiece.wav"] = &hSample;
-        hSample = BASS_SampleLoad(false, "data/sounds/boneCrack1.wav", 0, 0, 20, 0);
-        sSamplesLoaded["data/sounds/boneCrack1.wav"] = &hSample;
-        hSample = BASS_SampleLoad(false, "data/sounds/boneCrack2.wav", 0, 0, 20, 0);
-        sSamplesLoaded["data/sounds/boneCrack2.wav"] = &hSample;
-        hSample = BASS_SampleLoad(false, "data/sounds/dodge.wav", 0, 0, 20, 0);
-        sSamplesLoaded["data/sounds/dodge.wav"] = &hSample;
-        hSample = BASS_SampleLoad(false, "data/sounds/hit.wav", 0, 0, 20, 0);
-        sSamplesLoaded["data/sounds/hit.wav"] = &hSample;
-        hSample = BASS_SampleLoad(false, "data/sounds/swing.wav", 0, 0, 20, 0);
-        sSamplesLoaded["data/sounds/swing.wav"] = &hSample;
-        hSample = BASS_SampleLoad(false, "data/sounds/sword.wav", 0, 0, 20, 0);
-        sSamplesLoaded["data/sounds/sword.wav"] = &hSample;
-    }
-
+    void loadSamples();
 };
 
 class GUI {

@@ -6,6 +6,7 @@
 #include "shader.h"
 #include "input.h"
 #include "animation.h"
+#include "libs/bass.h"
 
 #include <cmath>
 
