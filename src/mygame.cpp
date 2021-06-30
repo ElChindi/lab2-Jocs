@@ -468,7 +468,9 @@ void LandStage::update(double dt) {
 	//Inputs
 
 	Scene::world->player->attack(dt);
-	if (!Scene::world->player->pirate->attacking) {
+	Scene::world->player->dodge(dt);
+
+	if (!Scene::world->player->pirate->attacking && !Scene::world->player->pirate->dodging) {
 		Scene::world->player->pirate->movePlayer(dt);
 		/*if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::gamepads[0].direction & PAD_UP) Scene::world->player->pirate->increaseVelocity(dt);
 		if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::gamepads[0].direction & PAD_DOWN) Scene::world->player->pirate->increaseVelocity(dt);
@@ -476,20 +478,28 @@ void LandStage::update(double dt) {
 		if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::gamepads[0].direction & PAD_RIGHT) Scene::world->player->pirate->increaseVelocity(dt);*/
 		if (Input::wasKeyPressed(SDL_SCANCODE_E) || Input::gamepads[0].wasButtonPressed(Y_BUTTON)) Scene::world->player->comeAboard();
 		if (Input::wasKeyPressed(SDL_SCANCODE_KP_SPACE) || Input::gamepads[0].wasButtonPressed(X_BUTTON)) Scene::world->player->initiateAttack();
+		if (Input::wasKeyPressed(SDL_SCANCODE_Q) || Input::gamepads[0].wasButtonPressed(B_BUTTON)) Scene::world->player->initiateDodge();
 	}
 
-	float rightAnalog = Input::gamepads[0].axis[Gamepad::RIGHT_ANALOG_X];
+	float rightAnalogx = Input::gamepads[0].axis[Gamepad::RIGHT_ANALOG_X];
+	float rightAnalogy = Input::gamepads[0].axis[Gamepad::RIGHT_ANALOG_Y];
 
-	if (rightAnalog > 0.2) 
+	if (rightAnalogx > 0.2) 
 	{ 
-		Scene::world->player->pirate->rotate(dt * 4 * abs(rightAnalog), eclock); 
+		Scene::world->player->pirate->rotate(dt * 4 * abs(rightAnalogx), eclock); 
 	}
 	else if (Input::isKeyPressed(SDL_SCANCODE_RIGHT)) { Scene::world->player->pirate->rotate(dt * 3, eclock); }
-	if (rightAnalog < -0.2) 
+	if (rightAnalogx < -0.2) 
 	{
-		Scene::world->player->pirate->rotate(dt * 4 * abs(rightAnalog), antieclock); 
+		Scene::world->player->pirate->rotate(dt * 4 * abs(rightAnalogx), antieclock); 
 	}
 	else if (Input::isKeyPressed(SDL_SCANCODE_LEFT)) { Scene::world->player->pirate->rotate(dt * 3, antieclock); }
+
+	if (rightAnalogy > 0.2)
+	{
+		//Camera::current->move(Vector3(0.0f, 0.0f, 1.0f));
+	}
+
 
 	//camera follows pirate with lerp
 	Scene::world->playingCam->enable();
@@ -524,6 +534,7 @@ Player::Player() {
 	pirate->currAnimation = pirate->playerAnimations[0];
 
 	pirate->attacking = false;
+	pirate->dodging = false;
 	pirate->hp = MAX_PLAYER_HP;
 }
 
@@ -597,6 +608,22 @@ void Player::attack(float dt) {
 		}
 	}
 }
+
+void Player::initiateDodge() {
+	pirate->dodging = true;
+	pirate->anim_time = 0.2;
+	pirate->currAnimation = pirate->playerAnimations[4];
+}
+
+void Player::dodge(float dt) {
+	if (pirate->dodging) {
+		if (pirate->anim_time < 1) pirate->anim_time += dt;
+		else {
+			pirate->dodging = false;
+			pirate->currAnimation = pirate->playerAnimations[0];
+		}
+	}
+}
 //----------------------------------------Skybox----------------------------------------//
 Skybox::Skybox() {
 	loadMeshAndTexture("data/cielo.ASE", "data/cielo.tga");
@@ -646,7 +673,7 @@ void Isle::createStuff() {
 		EntityMesh* stuff = new EntityMesh();
 		this->collisionableThings.push_back(stuff);
 		stuff->model.setIdentity();
-		stuff->scale(75);
+		stuff->scale(120);
 		stuff->model.rotate(random(6.28), Vector3(0, 1, 0));
 		stuff->model.translateGlobal(pos.x, pos.y, pos.z);
 		char variation = rand() % 2 + 1;
@@ -667,6 +694,9 @@ void Isle::createEnemies(int n) {
 		enemy->scale(2);
 		enemy->model.translateGlobal(pos.x, pos.y, pos.z);
 		enemy->loadMeshAndTexture("data/models/skeli/skeli.mesh", "data/models/skeli/color-atlas-new.tga");
+		enemy->attacking = false;
+		enemy->dodging = false;
+		enemy->attackTimer = 3;
 		enemiesLeft -= 1;
 	}
 }
@@ -757,59 +787,78 @@ Vector3 Isle::getNewIslePosition(int minX, int maxX, int minZ, int maxZ) {
 void Isle::updateEnemies(float dt) {
 	for (Skeli* enemy : enemies) {
 
+		//MOVEMENT
 		//create active enemy
-		if (activeEnemy == NULL && enemy->isNearPlayer(9))
-		{
-			activeEnemy = enemy;
-			enemy->followPlayer(dt);
-			enemy->moving = false;
-		}
-		//get active enemy closer
-		else if (activeEnemy == enemy && enemy->isNearPlayer(4))
-		{
-			enemy->followPlayer(dt);
-			enemy->moving = false;
-		}
-		//allow active enemy go closer
-		else if (activeEnemy == enemy && enemy->isNearPlayer(30))
-		{
-			enemy->increaseVelocity(dt);
-			enemy->followPlayer(dt);
-			enemy->moving = true;
-		}
-		//make other enemies wait
-		else if (enemy->isNearPlayer(8))
-		{
-			enemy->followPlayer(dt);
-			enemy->moving = false;
-		}
-		//make enemies get closer
-		else if (enemy->isNearPlayer(30))
-		{
-			enemy->increaseVelocity(dt);
-			enemy->followPlayer(dt);
-			enemy->moving = true;
-		}
-		//too far away
-		else {
-			enemy->moving = false;
-			if (activeEnemy == enemy) {
-				activeEnemy == NULL;
+		if (!enemy->attacking) {
+			if (activeEnemy == NULL && enemy->isNearPlayer(9))
+			{
+				activeEnemy = enemy;
+				enemy->followPlayer(dt);
+				enemy->moving = false;
+			}
+			//get active enemy closer
+			else if (activeEnemy == enemy && enemy->isNearPlayer(4))
+			{
+				enemy->followPlayer(dt);
+				enemy->moving = false;
+			}
+			//allow active enemy go closer
+			else if (activeEnemy == enemy && enemy->isNearPlayer(30))
+			{
+				enemy->increaseVelocity(dt);
+				enemy->followPlayer(dt);
+				enemy->moving = true;
+			}
+			//make other enemies wait
+			else if (enemy->isNearPlayer(8))
+			{
+				enemy->followPlayer(dt);
+				enemy->moving = false;
+			}
+			//make enemies get closer
+			else if (enemy->isNearPlayer(30))
+			{
+				enemy->increaseVelocity(dt);
+				enemy->followPlayer(dt);
+				enemy->moving = true;
+			}
+			//too far away
+			else {
+				enemy->moving = false;
+				if (activeEnemy == enemy) {
+					activeEnemy == NULL;
+				}
 			}
 		}
 
+
+		//COMBAT
+		if (activeEnemy == enemy) {
+			if (enemy->isNearPlayer(5)) {
+				enemy->attack(dt);
+				if (enemy->attackTimer > 0) enemy->attackTimer -= dt;
+				else
+				{
+					enemy->initiateAttack();
+					enemy->attackTimer = 3;
+				}
+			}
+			else enemy->attacking = false;
+		}
+
+
 		//Update animations
-		if (enemy->attacking == false) {
-			if (enemy->moving == false) {
+		if (!enemy->attacking) {
+			if (!enemy->moving) {
 				enemy->currAnimation = enemy->skeliAnimations[0];
 			}
 			else {
 				enemy->currAnimation = enemy->skeliAnimations[1];
 			}
 		}
-		else {
-			enemy->currAnimation = enemy->skeliAnimations[3];
-		}
+		//else {
+		//	enemy->currAnimation = enemy->skeliAnimations[3];
+		//}
 
 
 
@@ -969,6 +1018,18 @@ void Humanoid::movePlayer(float dt) {
 		}
 	}
 }
+void Humanoid::increaseVelocity(float dt) {
+
+	currentVelocity = clamp(currentVelocity + dt * 10, 0, maxVelocity);
+
+}
+
+void Humanoid::rotate(float dt, eRotation rot) {
+	if (rot == eclock)
+		model.rotate(0.5 * dt, Vector3(0, 1, 0));
+	else
+		model.rotate(-0.5 * dt, Vector3(0, 1, 0));
+}
 
 void Skeli::followPlayer(float dt) {
 	Vector3 playerPos = Scene::world->player->pirate->getPosition();
@@ -990,18 +1051,31 @@ bool Skeli::isNearPlayer(int radius) {
 	return ((playerPos - enemyPos).length() < radius);
 }
 
-void Humanoid::increaseVelocity(float dt) {
-
-	currentVelocity = clamp(currentVelocity + dt * 10, 0, maxVelocity);
-
+void Skeli::initiateAttack() {
+	attacking = true;
+	anim_time = 0;
+	currAnimation = skeliAnimations[2];
 }
 
-void Humanoid::rotate(float dt, eRotation rot) {
-	if (rot == eclock)
-		model.rotate(0.5 * dt, Vector3(0, 1, 0));
-	else
-		model.rotate(-0.5 * dt, Vector3(0, 1, 0));
+void Skeli::attack(float dt) {
+	if (attacking) {
+		if (anim_time < currAnimation->duration) anim_time += dt;
+		else {
+			attacking = false;
+			currAnimation = skeliAnimations[0];
+		}
+		//if (0.3 > anim_time > 0.8 && !bolita->allreadyHitPlayer) {
+		//	Bolitahit() {
+		//		is player dodging?
+		//	}
+		//}
+
+	}
 }
+
+
+
+
 
 //----------------------------------------Entity----------------------------------------//
 void EntityMesh::render()
@@ -1107,7 +1181,7 @@ void Humanoid::render()
 	//render the mesh using the shader
 	//mesh->render(GL_TRIANGLES);
 
-	if(attacking)currAnimation->assignTime(anim_time);
+	if(attacking | dodging)currAnimation->assignTime(anim_time);
 	else currAnimation->assignTime(Game::instance->time);
 
 	mesh->renderAnimated(GL_TRIANGLES, &currAnimation->skeleton);

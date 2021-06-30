@@ -104,6 +104,7 @@ public:
     Animation* currAnimation;
     float anim_time;
     bool attacking;
+    bool dodging;
     int hp;
 
     Humanoid();
@@ -140,6 +141,7 @@ class Skeli : public Humanoid
 public:
     bool alive;
     bool moving;
+    float attackTimer;
 
 
     Skeli() {
@@ -258,6 +260,8 @@ public:
     bool getPlayerSpawn(Vector3& spawnPos); // Finds a place where the player can spawn in the isle
     void initiateAttack();
     void attack(float dt);
+    void initiateDodge();
+    void dodge(float dt);
 };
 
 class Sea : public EntityMesh
