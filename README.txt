@@ -19,7 +19,7 @@ When being on the ship:
 - (   A-D   | Left stick ): rotate ship
 - (    W    |      A     ): accelerate
 - (    S    |      B     ): break
-- (    E    |      Y     ): go down to isle
+- (    E    |      Y     ): go down to isle (should be still)
 
 Miscellaneous:
 
