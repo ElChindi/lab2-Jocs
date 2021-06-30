@@ -157,6 +157,8 @@ public:
     void initiateAttack();
     void attack(float dt);
     bool hitPlayer();
+    //void initiateDie();   ??
+    void die();
 };
 
 class Ship : public EntityMesh
@@ -238,7 +240,7 @@ public:
 
     void renderEnemies() {
         for (Skeli* enemy : enemies) {
-            enemy->render();
+            if(enemy->alive) enemy->render();
         }
     };
     static void renderAll() {
@@ -268,6 +270,8 @@ public:
     bool hitEnemy();
     void initiateDodge();
     void dodge(float dt);
+    //void initiateDie();   ??
+    void die();
 };
 
 class Sea : public EntityMesh
