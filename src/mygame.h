@@ -388,9 +388,8 @@ public:
     }
 
     HCHANNEL play(const char* filename);
-    HCHANNEL playloop(const char* filename);
 
-    void stop(HCHANNEL hSample);
+    void stop(HCHANNEL hSampleChannel);
 
     void loadSamples();
 };
