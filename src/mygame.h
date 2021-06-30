@@ -341,7 +341,7 @@ public:
 
     bool isPaused;
 
-    HCHANNEL currentMusic;
+    HSAMPLE currentMusic;
     
     
     static Scene* getInstance() {
@@ -359,7 +359,7 @@ public:
 
     static AudioManager* audio;
 
-    static std::map<std::string, HCHANNEL*> sSamplesLoaded;
+    static std::map<std::string, HSAMPLE*> sSamplesLoaded;
 
 
 
@@ -378,7 +378,7 @@ public:
         return audio;
     }
 
-    HCHANNEL play(const char* filename) {
+    HSAMPLE play(const char* filename) {
 
         assert(filename);
 
@@ -393,13 +393,12 @@ public:
         HCHANNEL hSampleChannel = NULL;
 
         //check if loaded
-        std::map<std::string, HCHANNEL*>::iterator it = sSamplesLoaded.find(filename);
+        std::map<std::string, HSAMPLE*>::iterator it = sSamplesLoaded.find(filename);
         if (it != sSamplesLoaded.end())
         {
-            hSampleChannel = *it->second;
-            //hSampleChannel = BASS_SampleGetChannel(*it->second, false);
+            hSampleChannel = BASS_SampleGetChannel(*it->second, false);
             BASS_ChannelPlay(hSampleChannel, true);
-            return hSampleChannel;
+            return *it->second;
         }
         else
         {
@@ -409,14 +408,13 @@ public:
 
             
             hSampleChannel = BASS_SampleGetChannel(hSample, false);
-            sSamplesLoaded[filename] = &hSampleChannel;
+            sSamplesLoaded[filename] = &hSample;
             BASS_ChannelPlay(hSampleChannel, true);
 
-            return hSampleChannel;
+            return hSample;
         };
     }
-    HCHANNEL playloop(const char* filename) {
-
+    HSAMPLE playloop(const char* filename) {
         assert(filename);
 
         if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
@@ -430,16 +428,12 @@ public:
         HCHANNEL hSampleChannel = NULL;
 
         //check if loaded
-        std::map<std::string, HCHANNEL*>::iterator it = sSamplesLoaded.find(filename);
+        std::map<std::string, HSAMPLE*>::iterator it = sSamplesLoaded.find(filename);
         if (it != sSamplesLoaded.end())
         {
-            hSampleChannel = *it->second;
-
-            //debug
-            DWORD a = BASS_ChannelIsActive(hSampleChannel);
-
+            hSampleChannel = BASS_SampleGetChannel(*it->second, false);
             BASS_ChannelPlay(hSampleChannel, true);
-            return hSampleChannel;
+            return *it->second;
         }
         else
         {
@@ -447,17 +441,41 @@ public:
 
             HSAMPLE hSample = BASS_SampleLoad(false, filename, 0, 0, 20, BASS_SAMPLE_LOOP);
 
-            hSampleChannel = BASS_SampleGetChannel(hSample, false);
-            sSamplesLoaded[filename] = &hSampleChannel;
-            BASS_ChannelPlay(hSampleChannel, true);
-            DWORD a = BASS_ChannelIsActive(hSampleChannel);
 
-            return hSampleChannel;
+            hSampleChannel = BASS_SampleGetChannel(hSample, false);
+            sSamplesLoaded[filename] = &hSample;
+            BASS_ChannelPlay(hSampleChannel, true);
+
+            return hSample;
         };
+        
     }
 
-    void stop(HCHANNEL hChannel) {
-        BASS_ChannelPause(hChannel);
+    void stop(HSAMPLE hSample) {
+        HCHANNEL hSampleChannel = BASS_SampleGetChannel(hSample, false);
+        BASS_ChannelPause(hSampleChannel);
+    }
+
+    void loadSamples() {
+        HSAMPLE hSample;
+        hSample = BASS_SampleLoad(false, "data/music/Battle.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
+        sSamplesLoaded["data/music/Battle.wav"] = &hSample;
+        hSample = BASS_SampleLoad(false, "data/music/Island.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
+        sSamplesLoaded["data/music/Island.wav"] = &hSample;
+        hSample = BASS_SampleLoad(false, "data/music/Onepiece.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
+        sSamplesLoaded["data/music/Onepiece.wav"] = &hSample;
+        hSample = BASS_SampleLoad(false, "data/sounds/boneCrack1.wav", 0, 0, 20, 0);
+        sSamplesLoaded["data/sounds/boneCrack1.wav"] = &hSample;
+        hSample = BASS_SampleLoad(false, "data/sounds/boneCrack2.wav", 0, 0, 20, 0);
+        sSamplesLoaded["data/sounds/boneCrack2.wav"] = &hSample;
+        hSample = BASS_SampleLoad(false, "data/sounds/dodge.wav", 0, 0, 20, 0);
+        sSamplesLoaded["data/sounds/dodge.wav"] = &hSample;
+        hSample = BASS_SampleLoad(false, "data/sounds/hit.wav", 0, 0, 20, 0);
+        sSamplesLoaded["data/sounds/hit.wav"] = &hSample;
+        hSample = BASS_SampleLoad(false, "data/sounds/swing.wav", 0, 0, 20, 0);
+        sSamplesLoaded["data/sounds/swing.wav"] = &hSample;
+        hSample = BASS_SampleLoad(false, "data/sounds/sword.wav", 0, 0, 20, 0);
+        sSamplesLoaded["data/sounds/sword.wav"] = &hSample;
     }
 
 };

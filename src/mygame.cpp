@@ -14,7 +14,7 @@
 
 std::vector<Animation*> Humanoid::playerAnimations;
 std::vector<Animation*> Humanoid::skeliAnimations;
-std::map<std::string, HCHANNEL*> AudioManager::sSamplesLoaded;
+std::map<std::string, HSAMPLE*> AudioManager::sSamplesLoaded;
 
 AudioManager* AudioManager::audio = NULL;
 Scene* Scene::world = NULL;
@@ -27,8 +27,9 @@ int GUI::currentButton = 0;
 Scene::Scene() {
 
 
-	//Load animations
+	//Load resources
 	Humanoid::loadAnimations();
+	AudioManager::audio->loadSamples();
 
 	//Initialize Player
 	player = new Player();
