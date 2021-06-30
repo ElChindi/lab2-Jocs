@@ -106,7 +106,7 @@ Scene::Scene() {
 	GUI::usingMouse = false;
 	GUI::currentButton = 0;
 
-	currentMusic = AudioManager::audio->playloop("data/music/Island.wav");
+	currentMusic = AudioManager::audio->play("data/music/Island.wav");
 
 }
 
@@ -332,7 +332,7 @@ void GUI::renderMainMenu() {
 	if (renderButton(0, xCenter - 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/startGame.tga"), true)) {
 		Game::instance->current_stage = 2;
 		AudioManager::audio->stop(Scene::world->currentMusic);
-		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Island.wav");
+		Scene::world->currentMusic = AudioManager::audio->play("data/music/Island.wav");
 	}
 	renderButton(1, xCenter - 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
 	if (renderButton(2, xCenter - 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/exit.tga"), true)) {
@@ -365,7 +365,7 @@ void GUI::renderPauseMenu() {
 		GUI::usingMouse = true;
 		GUI::currentButton = 0;
 		AudioManager::audio->stop(Scene::world->currentMusic);
-		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Island.wav");
+		Scene::world->currentMusic = AudioManager::audio->play("data/music/Island.wav");
 	}
 
 	glEnable(GL_DEPTH_TEST);
@@ -629,9 +629,9 @@ void Player::comeAshore()
 
 			AudioManager::audio->stop(Scene::world->currentMusic);
 			if(Scene::world->currentIsle == Scene::world->startingIsle || !Scene::world->currentIsle->enemiesLeft)
-				Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Island.wav");
+				Scene::world->currentMusic = AudioManager::audio->play("data/music/Island.wav");
 			else
-				Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav");
+				Scene::world->currentMusic = AudioManager::audio->play("data/music/Battle.wav");
 		};
 	}
 };
@@ -644,7 +644,7 @@ void Player::comeAboard()
 		Scene::world->currentIsle = NULL;
 		Game::instance->current_stage = 1;
 		AudioManager::audio->stop(Scene::world->currentMusic);
-		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Onepiece.wav");
+		Scene::world->currentMusic = AudioManager::audio->play("data/music/Onepiece.wav");
 	}
 };
 
@@ -663,7 +663,7 @@ void Player::respawnPlayer() {
 
 	Scene::world->currentIsle = Scene::world->startingIsle;
 	AudioManager::audio->stop(Scene::world->currentMusic);
-	Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Island.wav");
+	Scene::world->currentMusic = AudioManager::audio->play("data/music/Island.wav");
 }
 
 bool Player::getPlayerSpawn(Vector3& spawnPos) {
@@ -690,6 +690,7 @@ void Player::initiateAttack() {
 	pirate->attacking = true;
 	pirate->anim_time = 0;
 	pirate->currAnimation = pirate->playerAnimations[3];
+	AudioManager::audio->play("data/sounds/sword.wav");
 }
 
 void Player::attack(float dt) {
@@ -714,6 +715,12 @@ bool Player::hitEnemy() {
 		if (!enemy->mesh->testSphereCollision(enemy->model, hitCenter, 2 / enemy->scaleFactor, coll, collnorm)) continue;
 
 		enemy->hp -= 1;
+		int r = rand() % 2;
+
+		if(r == 0 )
+		AudioManager::audio->play("data/sounds/boneCrack1.wav");
+		else
+		AudioManager::audio->play("data/sounds/boneCrack2.wav");
 
 		return true;
 	}
@@ -724,6 +731,7 @@ void Player::initiateDodge() {
 	pirate->dodging = true;
 	pirate->anim_time = 0.2;
 	pirate->currAnimation = pirate->playerAnimations[4];
+	AudioManager::audio->play("data/sounds/dodge.wav");
 }
 
 void Player::dodge(float dt) {
@@ -813,7 +821,7 @@ void Isle::createEnemies(int n) {
 		enemy->attacking = false;
 		enemy->dodging = false;
 		enemy->dying = false;
-		enemy->attackTimer = 3;
+		enemy->attackTimer = 1;
 		enemiesLeft -= 1;
 	}
 }
@@ -871,7 +879,7 @@ void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ)
 		char type = rand() % ISLE_TYPES + 1;
 		isle->type = type;
 		isle->loadMeshAndTexture(("data/islas/"+std::to_string(type)+".obj").c_str(), ("data/islas/" + std::to_string(type) + ".tga").c_str());
-		//isle->createStuff();
+		isle->createStuff();
 		isle->createEnemies(10);
 		isle->enemiesLeft = true;
 		islesLeft -= 1;
@@ -1181,6 +1189,7 @@ void Skeli::initiateAttack() {
 	attacking = true;
 	anim_time = 0;
 	currAnimation = skeliAnimations[2];
+	AudioManager::audio->play("data/sounds/swing.wav");
 }
 
 void Skeli::attack(float dt) {
@@ -1193,6 +1202,7 @@ void Skeli::attack(float dt) {
 
 		if (!hasHitSomeone && anim_time > 0.9 && anim_time < 1 && hitPlayer()) {
 			hasHitSomeone = true;
+			AudioManager::audio->play("data/sounds/hit.wav");
 		}
 	}
 }
@@ -1268,7 +1278,6 @@ void Sword::render()
 	//enable shader and pass uniforms
 	shader->enable();
 	shader->setUniform("u_color", color);
-	//model.rotate(180.0f * DEG2RAD, Vector3(0, 1, 0));
 	shader->setUniform("u_model", model);
 	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 	shader->setUniform("u_texture", texture, 0);
@@ -1376,7 +1385,7 @@ AudioManager::AudioManager() {
 	}
 };
 
-HSAMPLE* AudioManager::play(const char* filename) {
+HCHANNEL AudioManager::play(const char* filename) {
 
 	assert(filename);
 
@@ -1397,63 +1406,12 @@ HSAMPLE* AudioManager::play(const char* filename) {
 		hSample = *it->second;
 		hSampleChannel = BASS_SampleGetChannel(hSample, false);
 		BASS_ChannelPlay(hSampleChannel, true);
-		return &hSample;
+		return hSampleChannel;
 	}
-	//else
-	//{
-	//	//load it
-
-	//	HSAMPLE hSample = BASS_SampleLoad(false, filename, 0, 0, 20, 0);
-
-
-	//	hSampleChannel = BASS_SampleGetChannel(hSample, false);
-	//	sSamplesLoaded[filename] = &hSample;
-	//	BASS_ChannelPlay(hSampleChannel, true);
-
-	//	return hSample;
-	//};
-}
-HSAMPLE* AudioManager::playloop(const char* filename) {
-	assert(filename);
-
-	if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
-	{
-		//error abriendo la tarjeta de sonido...
-	}
-
-	//El handler para un sample
-	HSAMPLE hSample = NULL;
-	//El handler para un canal
-	HCHANNEL hSampleChannel = NULL;
-
-	//check if loaded
-	std::map<std::string, HSAMPLE*>::iterator it = sSamplesLoaded.find(filename);
-	if (it != sSamplesLoaded.end())
-	{
-		hSample = *(it->second);
-		hSampleChannel = BASS_SampleGetChannel(hSample, false);
-		BASS_ChannelPlay(hSampleChannel, true);
-		return &hSample;
-	}
-	//else
-	//{
-	//    //load it
-
-	//    HSAMPLE hSample = BASS_SampleLoad(false, filename, 0, 0, 20, BASS_SAMPLE_LOOP);
-
-
-	//    hSampleChannel = BASS_SampleGetChannel(hSample, false);
-	//    sSamplesLoaded[filename] = &hSample;
-	//    BASS_ChannelPlay(hSampleChannel, true);
-
-	//    return hSample;
-	//};
-
 }
 
-void AudioManager::stop(HSAMPLE* hSample) {
-	HSAMPLE hSamplea = *hSample;
-	HCHANNEL hSampleChannel = BASS_SampleGetChannel(hSamplea, false);
+void AudioManager::stop(HCHANNEL hSampleChannel) {
+
 	BASS_ChannelPause(hSampleChannel);
 }
 
