@@ -112,13 +112,13 @@ Scene::Scene() {
 //----------------------------------------GUI-----------------------------------------------//
 
 void GUI::navigateMenu(int nButtons) {
-	if (Input::wasKeyPressed(SDL_SCANCODE_W) || Input::wasKeyPressed(SDL_SCANCODE_UP) || Input::gamepads[0].hat == PAD_UP) {
+	if (Input::wasKeyPressed(SDL_SCANCODE_W) || Input::wasKeyPressed(SDL_SCANCODE_UP) || Input::gamepads[0].direction & PAD_UP) {
 		GUI::usingMouse = false;
-		GUI::currentButton = (nButtons + GUI::currentButton - 1) % nButtons; //to dont have negative n
+		GUI::currentButton = clamp(GUI::currentButton - 1, 0, nButtons - 1);
 	}
-	if (Input::wasKeyPressed(SDL_SCANCODE_S) || Input::wasKeyPressed(SDL_SCANCODE_DOWN) || Input::gamepads[0].hat == PAD_DOWN) {
+	if (Input::wasKeyPressed(SDL_SCANCODE_S) || Input::wasKeyPressed(SDL_SCANCODE_DOWN) || Input::gamepads[0].direction & PAD_DOWN) {
 		GUI::usingMouse = false;
-		GUI::currentButton = (GUI::currentButton + 1) % nButtons;
+		GUI::currentButton = clamp(GUI::currentButton + 1, 0, nButtons - 1);
 	}
 }
 
@@ -833,14 +833,14 @@ Vector3 Isle::getValidPosition() {
 		Vector3 collnorm;
 		float padding = 8;
 		if (!isAboveIsle(position, padding) ||
-			this->mesh->testSphereCollision(this->model, position + Vector3(0, 1.5, 0), 1.4 / this->scaleFactor, coll, collnorm)) {
+			this->mesh->testSphereCollision(this->model, position + Vector3(0, 1.5, 0), 1.4 / this->scaleFactor, coll, collnorm) ||
+			this->mesh->testRayCollision(this->model, position + Vector3(0, 1.5, 0), Vector3(0, 1, 0), coll, collnorm, 100)) {
 			validPos = false;
 			continue;
 		}
 	}
 	return position;
 }
-
 
 bool Isle::isAboveIsle(Vector3 pos) {
 	Vector3 coll;
