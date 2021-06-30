@@ -460,7 +460,9 @@ public:
     static const int nPauseButtons = 3;
     static void navigateMenu(int nButtons);
     static bool renderButton(int buttonNumber, float x, float y, float w, float h, Texture* tex, bool flipuvs);
-    static void renderHPBar(Humanoid* entity);
+    static void renderHPBar(float x, float y, float w, float h, Vector4 color);
+    static void renderSkeliHPBar(Skeli* enemy);
+    static void renderPlayerHPBar();
     static void renderAllHPBars();
     static void renderActiveEnemyHPBar();
     static void renderGradient();

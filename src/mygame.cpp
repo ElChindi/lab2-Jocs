@@ -79,8 +79,10 @@ Scene::Scene() {
 	Isle::isles.erase(it); //remove bgIsle from the true isles list
 	bgIsle->model.setIdentity();
 	bgIsle->scale(30);
-	bgIsle->model.translateGlobal(100, 0, 0);
+	bgIsle->model.translateGlobal(100, ISLE_Y_OFFSET, 0);
 	bgIsle->loadMeshAndTexture("data/islas/1.obj", "data/islas/1.tga");
+	bgIsle->type = 5;
+	bgIsle->createStuff();
 
 	bgShip = new Ship();
 	bgShip->model.setTranslation(15, 0, 55);
@@ -148,15 +150,10 @@ bool GUI::renderButton(int buttonNumber, float x, float y, float w, float h, Tex
 	return focus && pressed;
 }
 
-void GUI::renderHPBar(Humanoid* entity) {
+void GUI::renderHPBar(float x, float y, float w, float h, Vector4 color) {
 	Scene::world->playingCam->enable();
-	Vector3 bar_pos = entity->getPosition() + Vector3(0, 4.25, 0);
 	Mesh quad;
-	Vector3 projected_pos = Camera::current->project(bar_pos, Game::instance->window_width, Game::instance->window_height);
-	if (projected_pos.z > 1) return; //as it is projected in the other side of the camera
-	float distToCam = (bar_pos - Camera::current->eye).length(); //use distance to camera
-	if (distToCam == 0) return;
-	quad.createQuad(projected_pos.x, Game::instance->window_height - projected_pos.y, 150*entity->hp/distToCam, 150/distToCam, true);
+	quad.createQuad(x, y, w, h, true);
 	
 	Scene::world->cam2D->enable();
 
@@ -173,14 +170,38 @@ void GUI::renderHPBar(Humanoid* entity) {
 	shader->disable();
 }
 
+void GUI::renderSkeliHPBar(Skeli* enemy) {
+	Vector3 bar_pos = enemy->getPosition() + Vector3(0, 4.25, 0);
+	Vector3 projected_pos = Camera::current->project(bar_pos, Game::instance->window_width, Game::instance->window_height);
+	if (projected_pos.z > 1) return; //as it is projected in the other side of the camera
+	float distToCam = (bar_pos - Camera::current->eye).length(); //use distance to camera
+	if (distToCam == 0) return;
+	renderHPBar(projected_pos.x, Game::instance->window_height - projected_pos.y, 150 * enemy->hp / distToCam, 150 / distToCam, Vector4(1, 0, 0, 0.5));
+}
+
+void GUI::renderPlayerHPBar() {
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	int hp = Scene::world->player->pirate->hp;
+	int size = 20;
+	renderHPBar(50 + size * hp / 2.0, Game::instance->window_height - size, size * hp, size, Vector4(1, 0, 0, 0.9));
+	drawText(15, Game::instance->window_height - size*1.5 + 2, "HP", Vector3(1, 0, 0), 2);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+}
+
 void GUI::renderAllHPBars() {
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	for (Humanoid* enemy : Scene::world->currentIsle->enemies) {
-		renderHPBar(enemy);
+	for (Skeli* enemy : Scene::world->currentIsle->enemies) {
+		renderSkeliHPBar(enemy);
 	};
 
 	glEnable(GL_DEPTH_TEST);
@@ -197,7 +218,7 @@ void GUI::renderActiveEnemyHPBar() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	renderHPBar(enemy);
+	renderSkeliHPBar(enemy);
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -295,6 +316,7 @@ void MainMenuStage::render() {
 	Scene::world->sky.render();
 	Scene::world->bgSea.render();
 	Scene::world->bgIsle->render();
+	Scene::world->bgIsle->renderStuff();
 	Scene::world->bgShip->render();
 
 
@@ -405,6 +427,7 @@ void LandStage::render() {
 	
 	//GUI::renderAllHPBars();
 	GUI::renderActiveEnemyHPBar();
+	GUI::renderPlayerHPBar();
 
 	if (Scene::world->isPaused) {
 		Scene::world->cam2D->enable();
@@ -481,6 +504,7 @@ Player::Player() {
 
 
 	pirate = new Humanoid();
+	pirate->hp = MAX_PLAYER_HP;
 	pirate->maxVelocity = 4;
 	pirate->scale(2);
 	pirate->loadMeshAndTexture("data/models/pirate/pirate.mesh", "data/models/pirate/pineapple-32-32x.tga");
