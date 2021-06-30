@@ -524,6 +524,8 @@ void LandStage::update(double dt) {
 		return;
 	}
 
+	//kill player if 0 hp
+	if (Scene::world->player->pirate->hp <= 0) Scene::world->player->die();
 	//update sword position
 	Scene::world->player->sword->handMatrix = Scene::world->player->pirate->currAnimation->skeleton.getBoneMatrix("mixamorig_RightHand", false);
 	
@@ -732,6 +734,11 @@ void Player::dodge(float dt) {
 		}
 	}
 }
+
+void Player::die() {
+	//after the dying animation
+	respawnPlayer();
+}
 //----------------------------------------Skybox----------------------------------------//
 Skybox::Skybox() {
 	loadMeshAndTexture("data/cielo.ASE", "data/cielo.tga");
@@ -895,7 +902,13 @@ Vector3 Isle::getNewIslePosition(int minX, int maxX, int minZ, int maxZ) {
 
 void Isle::updateEnemies(float dt) {
 	for (Skeli* enemy : enemies) {
-
+		if (!enemy->alive) continue;
+		//kill enemy if 0 hp
+		if (enemy->hp <= 0) {
+			if (activeEnemy == enemy) activeEnemy = NULL;
+			enemy->die();
+			continue;
+		}
 		//MOVEMENT
 		//create active enemy
 		if (!enemy->attacking) {
@@ -1195,7 +1208,11 @@ bool Skeli::hitPlayer() {
 	return true;
 }
 
-
+void Skeli::die() {
+	//after the dying animation
+	alive = false;
+	Scene::world->player->points += 1;
+}
 
 //----------------------------------------Entity----------------------------------------//
 void EntityMesh::render()
