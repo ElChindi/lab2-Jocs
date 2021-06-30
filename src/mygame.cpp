@@ -161,7 +161,6 @@ bool GUI::renderButton(int buttonNumber, float x, float y, float w, float h, Tex
 }
 
 void GUI::renderHPBar(float x, float y, float w, float h, Vector4 color) {
-	Scene::world->playingCam->enable();
 	Mesh quad;
 	quad.createQuad(x, y, w, h, true);
 	
@@ -169,7 +168,7 @@ void GUI::renderHPBar(float x, float y, float w, float h, Vector4 color) {
 
 	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
 	shader->enable();
-	shader->setUniform("u_color", Vector4(1,0,0,0.5));
+	shader->setUniform("u_color", color);
 	Matrix44 quadModel;
 	shader->setUniform("u_model", quadModel);
 	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
@@ -190,15 +189,17 @@ void GUI::renderSkeliHPBar(Skeli* enemy) {
 }
 
 void GUI::renderPlayerHPBar() {
+	int hp = Scene::world->player->pirate->hp;
+	if (hp <= 0) return;
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	int hp = Scene::world->player->pirate->hp;
 	int size = 20;
-	renderHPBar(50 + size * hp / 2.0, Game::instance->window_height - size, size * hp, size, Vector4(1, 0, 0, 0.9));
+	renderHPBar(50 + size * hp / 2.0, Game::instance->window_height - size, size * hp, size, Vector4(1, 0, 0, 0.5));
 	drawText(15, Game::instance->window_height - size*1.5 + 2, "HP", Vector3(1, 0, 0), 2);
+	
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
@@ -253,6 +254,65 @@ void GUI::renderGradient() {
 	gradientBlack.render(GL_TRIANGLES);
 }
 
+void GUI::renderImage(float x, float y, float w, float h, Texture* tex, bool flipuvs) {
+	Mesh quad;
+	quad.createQuad(x, y, w, h, flipuvs);
+
+	Scene::world->cam2D->enable();
+
+	Shader* shader = Shader::Get("data/shaders/basic.vs", "data/shaders/texture.fs");
+	shader->enable();
+	shader->setUniform("u_color", Vector4(1,1,1,1));
+	Matrix44 quadModel;
+	shader->setUniform("u_model", quadModel);
+	shader->setUniform("u_viewprojection", Camera::current->viewprojection_matrix);
+	shader->setUniform("u_texture", tex, 0);
+	shader->setUniform("u_eye", Camera::current->eye);
+
+	quad.render(GL_TRIANGLES);
+	shader->disable();
+}
+
+void GUI::renderPlayerPoints() {
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	int points = Scene::world->player->points;
+	int size = 20;
+	drawText(15, 20, "POINTS", Vector3(1, 0.4, 0), 2);
+	drawText(100, 20, std::to_string(points), Vector3(0, 0, 0), 2);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+}
+
+void GUI::renderEnemiesLeftBar() {
+	if (!Scene::world->currentIsle->enemiesLeft) return;
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	int nEnemiesLeft = 0;
+	for (Skeli* enemy : Scene::world->currentIsle->enemies)
+		if (enemy->alive) nEnemiesLeft++;
+
+	if (nEnemiesLeft == 0) {
+		Scene::world->currentIsle->enemiesLeft = false;
+		return;
+	}
+	
+	int size = 20;
+	renderHPBar(590 + size * nEnemiesLeft / 2.0, Game::instance->window_height - size, size * nEnemiesLeft, size, Vector4(0, 0, 1, 0.5));
+	drawText(510, Game::instance->window_height - size * 1.5 + 2, "SKELIS", Vector3(0, 0, 1), 2);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+}
+
 void GUI::renderMainMenu() {
 	Scene::world->cam2D->enable();
 	glDisable(GL_DEPTH_TEST);
@@ -264,11 +324,12 @@ void GUI::renderMainMenu() {
 	//int yCenter = Game::instance->window_height / 2;
 
 	renderGradient();
+	renderImage(xCenter - 175, 200, 329, 205, Texture::Get("data/GUI/skulls_of_the_sea.tga"), true);
 
 	if (renderButton(0, xCenter - 200, 400 + 45 * 0, 250, 30, Texture::Get("data/GUI/startGame.tga"), true)) {
 		Game::instance->current_stage = 2;
 		AudioManager::audio->stop(Scene::world->currentMusic);
-		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav"); // change for main isle music
+		Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Island.wav");
 	}
 	renderButton(1, xCenter - 200, 400 + 45 * 1, 250, 30, Texture::Get("data/GUI/configuration.tga"), true);
 	if (renderButton(2, xCenter - 200, 400 + 45 * 2, 250, 30, Texture::Get("data/GUI/exit.tga"), true)) {
@@ -367,9 +428,10 @@ void SeaStage::render() {
 	//Draw the floor grid
 	//drawGrid();
 	Scene::world->sea.render();
+	GUI::renderPlayerPoints();
 
 	//render the FPS, Draw Calls, etc
-	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
+	//drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
 
 	if (Scene::world->isPaused) {
 		Scene::world->cam2D->enable();
@@ -435,11 +497,13 @@ void LandStage::render() {
 	Scene::world->sea.render();
 
 	//render the FPS, Draw Calls, etc
-	drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
+	//drawText(2, 2, getGPUStats(), Vector3(1, 1, 1), 2);
 	
 	//GUI::renderAllHPBars();
 	GUI::renderActiveEnemyHPBar();
 	GUI::renderPlayerHPBar();
+	GUI::renderPlayerPoints();
+	GUI::renderEnemiesLeftBar();
 
 	if (Scene::world->isPaused) {
 		Scene::world->cam2D->enable();
@@ -507,6 +571,7 @@ void LandStage::update(double dt) {
 //----------------------------------------Player----------------------------------------//
 Player::Player() {
 	onShip = false;
+	points = 0;
 
 	ship = new Ship();
 	ship->model.setTranslation(126, 0, -12);
@@ -548,8 +613,8 @@ void Player::comeAshore()
 			Game::instance->current_stage = 2;
 
 			AudioManager::audio->stop(Scene::world->currentMusic);
-			if(Scene::world->currentIsle == Scene::world->startingIsle)
-				Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav"); //change for main isle music
+			if(Scene::world->currentIsle == Scene::world->startingIsle || !Scene::world->currentIsle->enemiesLeft)
+				Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Island.wav");
 			else
 				Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav");
 		};
@@ -583,7 +648,7 @@ void Player::respawnPlayer() {
 
 	Scene::world->currentIsle = Scene::world->startingIsle;
 	AudioManager::audio->stop(Scene::world->currentMusic);
-	Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Battle.wav"); // change for main isle music
+	Scene::world->currentMusic = AudioManager::audio->playloop("data/music/Island.wav");
 }
 
 bool Player::getPlayerSpawn(Vector3& spawnPos) {
@@ -749,6 +814,7 @@ void Isle::createRandomIsles(int number, int minX, int maxX, int minZ, int maxZ)
 		isle->loadMeshAndTexture(("data/islas/"+std::to_string(type)+".obj").c_str(), ("data/islas/" + std::to_string(type) + ".tga").c_str());
 		//isle->createStuff();
 		isle->createEnemies(10);
+		isle->enemiesLeft = true;
 		islesLeft -= 1;
 	}
 }

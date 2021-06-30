@@ -196,6 +196,7 @@ public:
     std::vector<EntityMesh*> noCollisionableThings;
     std::vector<EntityMesh*> collisionableThings;
     std::vector<Skeli*> enemies;
+    bool enemiesLeft;
     Skeli* activeEnemy;
 
     Isle() {
@@ -251,6 +252,8 @@ public:
     bool onShip;
     Humanoid* pirate;
     Sword* sword;
+
+    int points;
 
     Player();
     void comeAshore();
@@ -469,6 +472,9 @@ public:
     static void renderAllHPBars();
     static void renderActiveEnemyHPBar();
     static void renderGradient();
+    static void renderImage(float x, float y, float w, float h, Texture* tex, bool flipuvs);
+    static void renderPlayerPoints();
+    static void renderEnemiesLeftBar();
     static void renderMainMenu();
     static void renderPauseMenu();
 };
