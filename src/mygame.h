@@ -348,7 +348,7 @@ public:
 
     bool isPaused;
 
-    HSAMPLE* currentMusic;
+    HCHANNEL currentMusic;
     
     
     static Scene* getInstance() {
@@ -387,10 +387,10 @@ public:
         return audio;
     }
 
-    HSAMPLE* play(const char* filename);
-    HSAMPLE* playloop(const char* filename);
+    HCHANNEL play(const char* filename);
+    HCHANNEL playloop(const char* filename);
 
-    void stop(HSAMPLE* hSample);
+    void stop(HCHANNEL hSample);
 
     void loadSamples();
 };
