@@ -102,7 +102,7 @@ public:
     float maxVelocity;
     float currentVelocity;
     Animation* currAnimation;
-
+    float anim_time;
     bool attacking;
     int hp;
 
@@ -151,6 +151,8 @@ public:
     void followPlayer(float dt);
     bool isNearPlayer(int radius);
 
+    void initiateAttack();
+    void attack(float dt);
 };
 
 class Ship : public EntityMesh
@@ -254,6 +256,8 @@ public:
     void comeAshore();
     void comeAboard();
     bool getPlayerSpawn(Vector3& spawnPos); // Finds a place where the player can spawn in the isle
+    void initiateAttack();
+    void attack(float dt);
 };
 
 class Sea : public EntityMesh

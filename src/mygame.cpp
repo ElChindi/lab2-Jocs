@@ -425,16 +425,25 @@ void LandStage::update(double dt) {
 
 	//update sword position
 	Scene::world->player->sword->handMatrix = Scene::world->player->pirate->currAnimation->skeleton.getBoneMatrix("mixamorig_RightHand", false);
-	Scene::world->player->sword->model = Scene::world->player->sword->handMatrix * Scene::world->player->pirate->model;
-
-	Scene::world->player->pirate->movePlayer(dt);
+	
+	Matrix44 mat = Scene::world->player->pirate->model;
+	mat.rotate(180.0f * DEG2RAD, Vector3(0, 1, 0));
+	Scene::world->player->sword->model = Scene::world->player->sword->handMatrix * mat;
+	
 	Scene::world->currentIsle->updateEnemies(dt);
 
-	if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::gamepads[0].direction & PAD_UP) Scene::world->player->pirate->increaseVelocity(dt);
-	if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::gamepads[0].direction & PAD_DOWN) Scene::world->player->pirate->increaseVelocity(dt);
-	if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::gamepads[0].direction & PAD_LEFT) Scene::world->player->pirate->increaseVelocity(dt);
-	if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::gamepads[0].direction & PAD_RIGHT) Scene::world->player->pirate->increaseVelocity(dt);
-	if (Input::wasKeyPressed(SDL_SCANCODE_E) || Input::gamepads[0].wasButtonPressed(Y_BUTTON)) Scene::world->player->comeAboard();
+	//Inputs
+
+	Scene::world->player->attack(dt);
+	if (!Scene::world->player->pirate->attacking) {
+		Scene::world->player->pirate->movePlayer(dt);
+		/*if (Input::isKeyPressed(SDL_SCANCODE_W) || Input::gamepads[0].direction & PAD_UP) Scene::world->player->pirate->increaseVelocity(dt);
+		if (Input::isKeyPressed(SDL_SCANCODE_S) || Input::gamepads[0].direction & PAD_DOWN) Scene::world->player->pirate->increaseVelocity(dt);
+		if (Input::isKeyPressed(SDL_SCANCODE_A) || Input::gamepads[0].direction & PAD_LEFT) Scene::world->player->pirate->increaseVelocity(dt);
+		if (Input::isKeyPressed(SDL_SCANCODE_D) || Input::gamepads[0].direction & PAD_RIGHT) Scene::world->player->pirate->increaseVelocity(dt);*/
+		if (Input::wasKeyPressed(SDL_SCANCODE_E) || Input::gamepads[0].wasButtonPressed(Y_BUTTON)) Scene::world->player->comeAboard();
+		if (Input::wasKeyPressed(SDL_SCANCODE_KP_SPACE) || Input::gamepads[0].wasButtonPressed(X_BUTTON)) Scene::world->player->initiateAttack();
+	}
 
 	float rightAnalog = Input::gamepads[0].axis[Gamepad::RIGHT_ANALOG_X];
 
@@ -532,6 +541,21 @@ bool Player::getPlayerSpawn(Vector3& spawnPos) {
 		return true;
 	}
 	return false;//null?
+}
+void Player::initiateAttack() {
+	pirate->attacking = true;
+	pirate->anim_time = 0;
+	pirate->currAnimation = pirate->playerAnimations[3];
+}
+
+void Player::attack(float dt) {
+	if (pirate->attacking) {
+		if (pirate->anim_time < pirate->currAnimation->duration) pirate->anim_time += dt;
+		else { 
+			pirate->attacking = false;
+			pirate->currAnimation = pirate->playerAnimations[0]; 
+		}
+	}
 }
 //----------------------------------------Skybox----------------------------------------//
 Skybox::Skybox() {
@@ -814,56 +838,67 @@ Humanoid::Humanoid() {
 
 
 void Humanoid::movePlayer(float dt) {
-	if (currentVelocity == 0) return;
+	
 	Vector3 dir = Vector3();
+	int anim = 0;
 	if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_A))) {
 		/*model.translate(0, 0, -dt * currentVelocity * 0.6);
 		model.translate(-dt * currentVelocity * 0.6, 0, 0);*/
 		dir = Vector3(-0.6, 0, -0.6);
-		currAnimation = playerAnimations[1];
+		increaseVelocity(dt);
+		anim = 1;
 	}
 	else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_LEFT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_A))) {
 		/*model.translate(0, 0, dt * currentVelocity * 0.3);
 		model.translate(-dt * currentVelocity * 0.3, 0, 0);*/
 		dir = Vector3(-0.3, 0, 0.3);
-		currAnimation = playerAnimations[2];
+		increaseVelocity(dt);
+		anim = 2;
 	}
 	else if ((Input::gamepads[0].direction & PAD_UP && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_W) && Input::isKeyPressed(SDL_SCANCODE_D))) {
 		/*model.translate(0, 0, -dt * currentVelocity * 0.6);
 		model.translate(dt * currentVelocity * 0.6, 0, 0);*/
 		dir = Vector3(0.6, 0, -0.6);
-		currAnimation = playerAnimations[1];
+		increaseVelocity(dt);
+		anim = 1;
 	}
 	else if ((Input::gamepads[0].direction & PAD_DOWN && Input::gamepads[0].direction & PAD_RIGHT) || (Input::isKeyPressed(SDL_SCANCODE_S) && Input::isKeyPressed(SDL_SCANCODE_D))) {
 		/*model.translate(0, 0, dt * currentVelocity * 0.3);
 		model.translate(dt * currentVelocity * 0.3, 0, 0);*/
 		dir = Vector3(0.3, 0, 0.3);
-		currAnimation = playerAnimations[2];
+		increaseVelocity(dt);
+		anim = 2;
 	}
 	else if(Input::gamepads[0].direction & PAD_UP || (Input::isKeyPressed(SDL_SCANCODE_W))){
 		//model.translate(0, 0, -dt * currentVelocity); 
 		dir = Vector3(0, 0, -1);
-		currAnimation = playerAnimations[1];
+		increaseVelocity(dt);
+		anim = 1;
 	}
 	else if (Input::gamepads[0].direction & PAD_DOWN || (Input::isKeyPressed(SDL_SCANCODE_S))) {
 		//model.translate(0, 0, dt * currentVelocity * 0.5);
 		dir = Vector3(0, 0, 0.5);
-		currAnimation = playerAnimations[2];
+		increaseVelocity(dt);
+		anim = 2;
 	}
 	else if (Input::gamepads[0].direction & PAD_LEFT || (Input::isKeyPressed(SDL_SCANCODE_A))) {
 		//model.translate(-dt * currentVelocity * 0.75, 0, 0);
 		dir = Vector3(-0.75, 0, 0);
-		currAnimation = playerAnimations[2];
+		increaseVelocity(dt);
+		anim = 2;
 	}
 	else if (Input::gamepads[0].direction & PAD_RIGHT || (Input::isKeyPressed(SDL_SCANCODE_D))) {
 		//model.translate(dt * currentVelocity * 0.75, 0, 0);
 		dir = Vector3(0.75, 0, 0);
-		currAnimation = playerAnimations[2];
+		increaseVelocity(dt);
+		anim = 2;
 	}
 	else {
-		currAnimation = playerAnimations[0];
+		anim = 0;
 	}
+	if (currentVelocity == 0) return;
 
+	currAnimation = playerAnimations[anim];
 		
 	model.translate(dt * currentVelocity * dir.x, 0, dt * currentVelocity * dir.z);
 
@@ -966,7 +1001,7 @@ void Sword::render()
 	//enable shader and pass uniforms
 	shader->enable();
 	shader->setUniform("u_color", color);
-	model.rotate(180.0f * DEG2RAD, Vector3(0, 1, 0));
+	//model.rotate(180.0f * DEG2RAD, Vector3(0, 1, 0));
 	shader->setUniform("u_model", model);
 	shader->setUniform("u_viewprojection", camera->viewprojection_matrix);
 	shader->setUniform("u_texture", texture, 0);
@@ -1032,7 +1067,8 @@ void Humanoid::render()
 	//render the mesh using the shader
 	//mesh->render(GL_TRIANGLES);
 
-	currAnimation->assignTime(Game::instance->time);
+	if(attacking)currAnimation->assignTime(anim_time);
+	else currAnimation->assignTime(Game::instance->time);
 
 	mesh->renderAnimated(GL_TRIANGLES, &currAnimation->skeleton);
 
