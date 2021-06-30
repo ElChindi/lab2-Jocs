@@ -29,7 +29,7 @@ Scene::Scene() {
 
 	//Load resources
 	Humanoid::loadAnimations();
-	AudioManager::audio->loadSamples();
+	AudioManager::getInstance()->loadSamples();
 
 	//Initialize Player
 	player = new Player();
@@ -812,6 +812,7 @@ void Isle::createEnemies(int n) {
 		enemy->loadMeshAndTexture("data/models/skeli/skeli.mesh", "data/models/skeli/color-atlas-new.tga");
 		enemy->attacking = false;
 		enemy->dodging = false;
+		enemy->dying = false;
 		enemy->attackTimer = 3;
 		enemiesLeft -= 1;
 	}
@@ -905,11 +906,12 @@ void Isle::updateEnemies(float dt) {
 	for (Skeli* enemy : enemies) {
 		if (!enemy->alive) continue;
 		//kill enemy if 0 hp
-		if (enemy->hp <= 0) {
+		if (enemy->hp <= 0 && !enemy->dying) {
 			if (activeEnemy == enemy) activeEnemy = NULL;
-			enemy->die();
+			enemy->initiateDie();
 			continue;
 		}
+		enemy->die(dt);
 		//MOVEMENT
 		//create active enemy
 		if (!enemy->attacking) {
@@ -971,7 +973,7 @@ void Isle::updateEnemies(float dt) {
 
 
 		//Update animations
-		if (!enemy->attacking) {
+		if (!enemy->attacking && enemy->alive) {
 			if (!enemy->moving) {
 				enemy->currAnimation = enemy->skeliAnimations[0];
 			}
@@ -1208,11 +1210,24 @@ bool Skeli::hitPlayer() {
 
 	return true;
 }
-
-void Skeli::die() {
-	//after the dying animation
-	alive = false;
+void Skeli::initiateDie()
+{
+	dying = true;
+	anim_time = 0;
+	currAnimation = skeliAnimations[3];
 	Scene::world->player->points += 1;
+}
+
+void Skeli::die(float dt) {
+	//after the dying animation
+	if (dying) {
+		if (anim_time < currAnimation->duration - 0.1) anim_time += dt;
+		else {
+			alive = false;
+			//currAnimation = skeliAnimations[0];
+		}
+	}
+	
 }
 
 //----------------------------------------Entity----------------------------------------//
@@ -1361,7 +1376,7 @@ AudioManager::AudioManager() {
 	}
 };
 
-HSAMPLE AudioManager::play(const char* filename) {
+HSAMPLE* AudioManager::play(const char* filename) {
 
 	assert(filename);
 
@@ -1382,7 +1397,7 @@ HSAMPLE AudioManager::play(const char* filename) {
 		hSample = *it->second;
 		hSampleChannel = BASS_SampleGetChannel(hSample, false);
 		BASS_ChannelPlay(hSampleChannel, true);
-		return hSample;
+		return &hSample;
 	}
 	//else
 	//{
@@ -1398,7 +1413,7 @@ HSAMPLE AudioManager::play(const char* filename) {
 	//	return hSample;
 	//};
 }
-HSAMPLE AudioManager::playloop(const char* filename) {
+HSAMPLE* AudioManager::playloop(const char* filename) {
 	assert(filename);
 
 	if (BASS_Init(-1, 44100, 0, 0, NULL) == false) //-1 significa usar el por defecto del sistema operativo
@@ -1415,10 +1430,10 @@ HSAMPLE AudioManager::playloop(const char* filename) {
 	std::map<std::string, HSAMPLE*>::iterator it = sSamplesLoaded.find(filename);
 	if (it != sSamplesLoaded.end())
 	{
-		hSample = *it->second;
+		hSample = *(it->second);
 		hSampleChannel = BASS_SampleGetChannel(hSample, false);
 		BASS_ChannelPlay(hSampleChannel, true);
-		return hSample;
+		return &hSample;
 	}
 	//else
 	//{
@@ -1436,29 +1451,30 @@ HSAMPLE AudioManager::playloop(const char* filename) {
 
 }
 
-void AudioManager::stop(HSAMPLE hSample) {
-	HCHANNEL hSampleChannel = BASS_SampleGetChannel(hSample, false);
+void AudioManager::stop(HSAMPLE* hSample) {
+	HSAMPLE hSamplea = *hSample;
+	HCHANNEL hSampleChannel = BASS_SampleGetChannel(hSamplea, false);
 	BASS_ChannelPause(hSampleChannel);
 }
 
 void AudioManager::loadSamples() {
-	HSAMPLE hSample;
-	hSample = BASS_SampleLoad(false, "data/music/Battle.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
-	sSamplesLoaded["data/music/Battle.wav"] = &hSample;
-	hSample = BASS_SampleLoad(false, "data/music/Island.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
-	sSamplesLoaded["data/music/Island.wav"] = &hSample;
-	hSample = BASS_SampleLoad(false, "data/music/Onepiece.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
-	sSamplesLoaded["data/music/Onepiece.wav"] = &hSample;
-	hSample = BASS_SampleLoad(false, "data/sounds/boneCrack1.wav", 0, 0, 20, 0);
-	sSamplesLoaded["data/sounds/boneCrack1.wav"] = &hSample;
-	hSample = BASS_SampleLoad(false, "data/sounds/boneCrack2.wav", 0, 0, 20, 0);
-	sSamplesLoaded["data/sounds/boneCrack2.wav"] = &hSample;
-	hSample = BASS_SampleLoad(false, "data/sounds/dodge.wav", 0, 0, 20, 0);
-	sSamplesLoaded["data/sounds/dodge.wav"] = &hSample;
-	hSample = BASS_SampleLoad(false, "data/sounds/hit.wav", 0, 0, 20, 0);
-	sSamplesLoaded["data/sounds/hit.wav"] = &hSample;
-	hSample = BASS_SampleLoad(false, "data/sounds/swing.wav", 0, 0, 20, 0);
-	sSamplesLoaded["data/sounds/swing.wav"] = &hSample;
-	hSample = BASS_SampleLoad(false, "data/sounds/sword.wav", 0, 0, 20, 0);
-	sSamplesLoaded["data/sounds/sword.wav"] = &hSample;
+	
+	hSample1 = BASS_SampleLoad(false, "data/music/Battle.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
+	sSamplesLoaded["data/music/Battle.wav"] = &hSample1;
+	hSample2 = BASS_SampleLoad(false, "data/music/Island.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
+	sSamplesLoaded["data/music/Island.wav"] = &hSample2;
+	hSample3 = BASS_SampleLoad(false, "data/music/Onepiece.wav", 0, 0, 20, BASS_SAMPLE_LOOP);
+	sSamplesLoaded["data/music/Onepiece.wav"] = &hSample3;
+	hSample4 = BASS_SampleLoad(false, "data/sounds/boneCrack1.wav", 0, 0, 20, 0);
+	sSamplesLoaded["data/sounds/boneCrack1.wav"] = &hSample4;
+	hSample5 = BASS_SampleLoad(false, "data/sounds/boneCrack2.wav", 0, 0, 20, 0);
+	sSamplesLoaded["data/sounds/boneCrack2.wav"] = &hSample5;
+	hSample6 = BASS_SampleLoad(false, "data/sounds/dodge.wav", 0, 0, 20, 0);
+	sSamplesLoaded["data/sounds/dodge.wav"] = &hSample6;
+	hSample7 = BASS_SampleLoad(false, "data/sounds/hit.wav", 0, 0, 20, 0);
+	sSamplesLoaded["data/sounds/hit.wav"] = &hSample7;
+	hSample8 = BASS_SampleLoad(false, "data/sounds/swing.wav", 0, 0, 20, 0);
+	sSamplesLoaded["data/sounds/swing.wav"] = &hSample8;
+	hSample9 = BASS_SampleLoad(false, "data/sounds/sword.wav", 0, 0, 20, 0);
+	sSamplesLoaded["data/sounds/sword.wav"] = &hSample9;
 }

@@ -143,6 +143,7 @@ public:
     bool alive;
     bool moving;
     float attackTimer;
+    bool dying;
 
 
     Skeli() {
@@ -157,8 +158,8 @@ public:
     void initiateAttack();
     void attack(float dt);
     bool hitPlayer();
-    //void initiateDie();   ??
-    void die();
+    void initiateDie();
+    void die(float dt);
 };
 
 class Ship : public EntityMesh
@@ -347,7 +348,7 @@ public:
 
     bool isPaused;
 
-    HSAMPLE currentMusic;
+    HSAMPLE* currentMusic;
     
     
     static Scene* getInstance() {
@@ -367,7 +368,15 @@ public:
 
     static std::map<std::string, HSAMPLE*> sSamplesLoaded;
 
-
+    HSAMPLE hSample1;
+    HSAMPLE hSample2;
+    HSAMPLE hSample3;
+    HSAMPLE hSample4;
+    HSAMPLE hSample5;
+    HSAMPLE hSample6;
+    HSAMPLE hSample7;
+    HSAMPLE hSample8;
+    HSAMPLE hSample9;
 
     AudioManager();
 
@@ -378,10 +387,10 @@ public:
         return audio;
     }
 
-    HSAMPLE play(const char* filename);
-    HSAMPLE playloop(const char* filename);
+    HSAMPLE* play(const char* filename);
+    HSAMPLE* playloop(const char* filename);
 
-    void stop(HSAMPLE hSample);
+    void stop(HSAMPLE* hSample);
 
     void loadSamples();
 };
